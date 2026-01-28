@@ -1,0 +1,19 @@
+body {
+  font-family: Arial;
+  text-align: center;
+  padding: 40px;
+}
+
+textarea {
+  width: 60%;
+  height: 150px;
+  padding: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  background: blue;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
