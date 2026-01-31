@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AI Resume ATS Checker</title>
+  <title>AI Resume ATS</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<header>
+  <h1>AI Resume ATS Dashboard</h1>
+</header>
+
 <div class="container">
-  <h1>AI Resume ATS Checker</h1>
+  <div class="card">
+    <h3>Job Description</h3>
+    <textarea id="jd" placeholder="Paste job description here..."></textarea>
 
-  <h3>Paste Job Description</h3>
-  <textarea id="jd" placeholder="Paste job description here..."></textarea>
+    <h3>Upload Resume PDF</h3>
+    <input type="file" id="pdf" accept=".pdf">
 
-  <h3>Upload Resume PDF</h3>
-  <input type="file" id="pdf" accept=".pdf">
-
-  <button onclick="analyze()">Analyze Resume</button>
+    <button onclick="analyze()">Analyze Resume</button>
+  </div>
 
   <div id="result"></div>
 </div>
