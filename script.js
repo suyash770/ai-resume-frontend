@@ -8,15 +8,34 @@ function analyze() {
   })
   .then(res => res.json())
   .then(data => {
+    let skills = data.resume_skills.map(s => `<span class="skill-box">${s}</span>`).join("");
+    let matched = data.matched_skills.map(s => `<span class="skill-box">${s}</span>`).join("");
+    let missing = data.missing_skills.map(s => `<span class="skill-box">${s}</span>`).join("");
+
     document.getElementById("result").innerHTML = `
-      <h2>ATS Score: ${data.score}%</h2>
-      <p><b>Resume Skills:</b> ${data.resume_skills.join(", ")}</p>
-      <p><b>Matched Skills:</b> ${data.matched_skills.join(", ")}</p>
-      <p><b>Missing Skills:</b> ${data.missing_skills.join(", ")}</p>
+      <div class="score-card">
+        <h2>ATS Score: ${data.score}%</h2>
+        <div class="progress-bar">
+          <div class="progress" style="width:${data.score}%">
+            ${data.score}%
+          </div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <h3>Resume Skills</h3>
+        ${skills}
+      </div>
+
+      <div class="score-card">
+        <h3>Matched Skills</h3>
+        ${matched}
+      </div>
+
+      <div class="score-card">
+        <h3>Missing Skills</h3>
+        ${missing}
+      </div>
     `;
-  })
-  .catch(err => {
-    document.getElementById("result").innerText =
-      "Error connecting to server";
   });
 }

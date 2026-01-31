@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AI Resume Analyzer</title>
+  <title>AI Resume ATS Checker</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>AI Resume Screening System</h1>
+<div class="container">
+  <h1>AI Resume ATS Checker</h1>
 
-<textarea id="resume" placeholder="Paste your resume text here..."></textarea>
-<br>
-<button onclick="analyze()">Analyze Resume</button>
+  <textarea id="resume" placeholder="Paste your resume text here..."></textarea>
+  <button onclick="analyze()">Analyze Resume</button>
 
-<h2 id="result"></h2>
+  <div id="result"></div>
+</div>
 
 <script src="script.js"></script>
 </body>
