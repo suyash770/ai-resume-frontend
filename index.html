@@ -10,7 +10,7 @@
 
   <div class="card">
     <h2>Job Description</h2>
-    <textarea id="jd" placeholder="Paste Job Description here (optional)..."></textarea>
+    <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
 
     <h3>OR Upload JD PDF</h3>
     <input type="file" id="jd_pdf" accept=".pdf">
@@ -22,6 +22,13 @@
       <button onclick="analyze()">Analyze Resume</button>
       <button class="clear-btn" onclick="clearResults()">Clear Results</button>
     </div>
+  </div>
+
+  <!-- 🔍 Search & Filter -->
+  <div class="filter-bar">
+    <input type="text" id="search" placeholder="Search by name..." onkeyup="loadCandidates()">
+    <input type="number" id="minScore" placeholder="Min score %" onkeyup="loadCandidates()">
+    <button onclick="downloadCSV()">Download CSV</button>
   </div>
 
   <div id="result"></div>

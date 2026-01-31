@@ -1,18 +1,14 @@
+let candidateData = [];
+
 function analyze() {
   const jdText = document.getElementById("jd").value;
   const jdFile = document.getElementById("jd_pdf").files[0];
   const files = document.getElementById("pdf").files;
-  const resultDiv = document.getElementById("result");
-
-  resultDiv.innerHTML = "<h3>Processing Resumes...</h3>";
 
   const formData = new FormData();
 
-  if (jdFile) {
-    formData.append("jd_pdf", jdFile);
-  } else {
-    formData.append("jd_text", jdText);
-  }
+  if (jdFile) formData.append("jd_pdf", jdFile);
+  else formData.append("jd_text", jdText);
 
   for (let i = 0; i < files.length; i++) {
     formData.append("resume_pdfs", files[i]);
@@ -24,71 +20,68 @@ function analyze() {
   }).then(() => loadCandidates());
 }
 
-
 function loadCandidates() {
-  const resultDiv = document.getElementById("result");
-  resultDiv.innerHTML = "";
-
   fetch("https://ai-resume-backend-y87p.onrender.com/candidates")
     .then(res => res.json())
     .then(data => {
-
-      // -------- SUMMARY CARDS --------
-      let total = data.length;
-      let avg = Math.round(data.reduce((a, b) => a + b.score, 0) / total);
-      let best = data[0];
-      let worst = data[data.length - 1];
-
-      let summary = `
-        <div class="summary">
-          <div class="card-box">Total Resumes<br><b>${total}</b></div>
-          <div class="card-box">Average Score<br><b>${avg}%</b></div>
-          <div class="card-box">Best Candidate<br><b>${best.name}</b></div>
-          <div class="card-box">Worst Candidate<br><b>${worst.name}</b></div>
-        </div>
-      `;
-
-      // -------- TABLE --------
-      let table = `
-        <table>
-          <tr>
-            <th>Name</th>
-            <th>Score</th>
-            <th>Matched Skills</th>
-            <th>Missing Skills</th>
-          </tr>
-      `;
-
-      data.forEach(c => {
-        table += `
-          <tr>
-            <td>${c.name}</td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width:${c.score}%">
-                  ${c.score}%
-                </div>
-              </div>
-            </td>
-            <td>${formatSkills(c.matched, true)}</td>
-            <td>${formatSkills(c.missing, false)}</td>
-          </tr>
-        `;
-      });
-
-      table += "</table>";
-
-      resultDiv.innerHTML = summary + table;
+      candidateData = data;
+      renderTable();
     });
 }
 
+function renderTable() {
+  const resultDiv = document.getElementById("result");
+  const search = document.getElementById("search").value.toLowerCase();
+  const minScore = parseInt(document.getElementById("minScore").value) || 0;
 
-function formatSkills(skills, matched) {
-  if (!skills) return "";
-  let color = matched ? "skill-match" : "skill-miss";
-  return skills.split(",").map(s => 
-    `<span class="${color}">${s.trim()}</span>`
-  ).join(" ");
+  let filtered = candidateData.filter(c =>
+    c.name.toLowerCase().includes(search) && c.score >= minScore
+  );
+
+  let table = `
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Score</th>
+        <th>Matched Skills</th>
+        <th>Missing Skills</th>
+      </tr>
+  `;
+
+  filtered.forEach(c => {
+    table += `
+      <tr>
+        <td>${c.name}</td>
+        <td>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${c.score}%">
+              ${c.score}%
+            </div>
+          </div>
+        </td>
+        <td>${c.matched}</td>
+        <td>${c.missing}</td>
+      </tr>
+    `;
+  });
+
+  table += "</table>";
+  resultDiv.innerHTML = table;
+}
+
+function downloadCSV() {
+  let csv = "Name,Score,Matched Skills,Missing Skills\n";
+
+  candidateData.forEach(c => {
+    csv += `${c.name},${c.score},"${c.matched}","${c.missing}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "candidates.csv";
+  a.click();
 }
 
 function clearResults() {

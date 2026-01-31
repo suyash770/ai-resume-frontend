@@ -127,3 +127,19 @@ td {
   display: inline-block;
   font-size: 12px;
 }
+
+.filter-bar {
+  width: 70%;
+  margin: 20px auto;
+  text-align: center;
+}
+
+.filter-bar input {
+  padding: 8px;
+  margin: 5px;
+  width: 200px;
+}
+
+.filter-bar button {
+  padding: 8px 15px;
+}
