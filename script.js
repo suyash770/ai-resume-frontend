@@ -4,7 +4,11 @@ function analyze() {
   let button = document.querySelector("button");
   let resultDiv = document.getElementById("result");
 
-  // Loading UI
+  if (!pdfFile) {
+    resultDiv.innerHTML = "<h3>Please upload a Resume PDF first 📄</h3>";
+    return;
+  }
+
   button.disabled = true;
   button.innerText = "Analyzing...";
   resultDiv.innerHTML = "<h3>Analyzing Resume... Please wait ⏳</h3>";
@@ -44,12 +48,11 @@ function analyze() {
       </div>
     `;
 
-    // Reset button
     button.disabled = false;
     button.innerText = "Analyze Resume";
   })
   .catch(err => {
-    resultDiv.innerHTML = "<h3>Error processing resume. Try again.</h3>";
+    resultDiv.innerHTML = "<h3>Server error. Please try again.</h3>";
     button.disabled = false;
     button.innerText = "Analyze Resume";
   });
