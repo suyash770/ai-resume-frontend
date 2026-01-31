@@ -1,6 +1,13 @@
 function analyze() {
   let jdText = document.getElementById("jd").value;
   let pdfFile = document.getElementById("pdf").files[0];
+  let button = document.querySelector("button");
+  let resultDiv = document.getElementById("result");
+
+  // Loading UI
+  button.disabled = true;
+  button.innerText = "Analyzing...";
+  resultDiv.innerHTML = "<h3>Analyzing Resume... Please wait ⏳</h3>";
 
   let formData = new FormData();
   formData.append("jd_text", jdText);
@@ -16,7 +23,7 @@ function analyze() {
     let matched = data.matched_skills.map(s => `<span class="skill-box">${s}</span>`).join("");
     let missing = data.missing_skills.map(s => `<span class="skill-box">${s}</span>`).join("");
 
-    document.getElementById("result").innerHTML = `
+    resultDiv.innerHTML = `
       <div class="score-card">
         <h2>ATS Score: ${data.score}%</h2>
         <div class="progress-bar">
@@ -36,5 +43,14 @@ function analyze() {
         <h3>Missing Skills</h3>${missing}
       </div>
     `;
+
+    // Reset button
+    button.disabled = false;
+    button.innerText = "Analyze Resume";
+  })
+  .catch(err => {
+    resultDiv.innerHTML = "<h3>Error processing resume. Try again.</h3>";
+    button.disabled = false;
+    button.innerText = "Analyze Resume";
   });
 }
