@@ -182,3 +182,28 @@ td {
 .drop-zone:hover {
   background: #e1f0ff;
 }
+
+.file-name {
+  margin: 8px 0;
+  font-size: 13px;
+  color: #0a66c2;
+}
+
+.dashboard {
+  display: flex;
+  width: 90%;
+  margin: 30px auto;
+  gap: 20px;
+}
+
+.table-area {
+  flex: 2;
+}
+
+.chart-area {
+  flex: 1;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}

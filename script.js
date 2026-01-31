@@ -2,26 +2,42 @@ const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
 let chart;
 
-// ---------- DRAG DROP ----------
 const jdDrop = document.getElementById("jdDrop");
 const resumeDrop = document.getElementById("resumeDrop");
 
+// Click to open file picker
 jdDrop.onclick = () => document.getElementById("jd_pdf").click();
 resumeDrop.onclick = () => document.getElementById("pdf").click();
 
+// Show filenames
+document.getElementById("jd_pdf").onchange = function () {
+  document.getElementById("jdFileName").innerText =
+    this.files[0]?.name || "";
+};
+
+document.getElementById("pdf").onchange = function () {
+  let names = Array.from(this.files).map(f => f.name).join(", ");
+  document.getElementById("resumeFileName").innerText = names;
+};
+
+// Drag & Drop
 jdDrop.ondrop = (e) => {
   e.preventDefault();
   document.getElementById("jd_pdf").files = e.dataTransfer.files;
+  document.getElementById("jdFileName").innerText =
+    e.dataTransfer.files[0].name;
 };
 
 resumeDrop.ondrop = (e) => {
   e.preventDefault();
   document.getElementById("pdf").files = e.dataTransfer.files;
+  let names = Array.from(e.dataTransfer.files).map(f => f.name).join(", ");
+  document.getElementById("resumeFileName").innerText = names;
 };
 
 jdDrop.ondragover = resumeDrop.ondragover = (e) => e.preventDefault();
 
-// ---------- ANALYZE ----------
+// Analyze
 function analyze() {
   const jdText = document.getElementById("jd").value;
   const jdFile = document.getElementById("jd_pdf").files[0];
@@ -41,26 +57,18 @@ function analyze() {
   }).then(() => loadCandidates());
 }
 
-// ---------- LOAD ----------
 function loadCandidates() {
   fetch(`${BASE_URL}/candidates`)
     .then(res => res.json())
     .then(data => {
       candidateData = data;
-      renderDashboard();
+      renderTable();
       renderChart();
     });
 }
 
-// ---------- DASHBOARD ----------
-function renderDashboard() {
+function renderTable() {
   const resultDiv = document.getElementById("result");
-  const search = document.getElementById("search").value.toLowerCase();
-  const minScore = parseInt(document.getElementById("minScore").value) || 0;
-
-  let filtered = candidateData.filter(c =>
-    c.name.toLowerCase().includes(search) && c.score >= minScore
-  );
 
   let table = `
     <table>
@@ -71,7 +79,7 @@ function renderDashboard() {
       </tr>
   `;
 
-  filtered.forEach(c => {
+  candidateData.forEach(c => {
     table += `
       <tr>
         <td>${c.name}</td>
@@ -85,7 +93,7 @@ function renderDashboard() {
   resultDiv.innerHTML = table;
 }
 
-// ---------- CHART ----------
+// Chart small & clean
 function renderChart() {
   const ctx = document.getElementById("scoreChart");
 
@@ -99,11 +107,14 @@ function renderChart() {
         label: 'ATS Score',
         data: candidateData.map(c => c.score),
       }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
     }
   });
 }
 
-// ---------- MODAL ----------
 function openModal(c) {
   const modal = document.getElementById("modal");
   const body = document.getElementById("modalBody");
@@ -112,9 +123,9 @@ function openModal(c) {
     <h2>${c.name}</h2>
     <h3>Score: ${c.score}%</h3>
     <h4>Matched Skills</h4>
-    ${formatSkills(c.matched, true)}
+    ${c.matched}
     <h4>Missing Skills</h4>
-    ${formatSkills(c.missing, false)}
+    ${c.missing}
   `;
 
   modal.style.display = "block";
@@ -122,29 +133,6 @@ function openModal(c) {
 
 function closeModal() {
   document.getElementById("modal").style.display = "none";
-}
-
-function formatSkills(skills, matched) {
-  if (!skills) return "";
-  let color = matched ? "skill-match" : "skill-miss";
-  return skills.split(",").map(s =>
-    `<span class="${color}">${s.trim()}</span>`
-  ).join(" ");
-}
-
-// ---------- CSV ----------
-function downloadCSV() {
-  let csv = "Name,Score,Matched Skills,Missing Skills\n";
-  candidateData.forEach(c => {
-    csv += `${c.name},${c.score},"${c.matched}","${c.missing}"\n`;
-  });
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "candidates.csv";
-  a.click();
 }
 
 function clearResults() {

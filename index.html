@@ -13,12 +13,14 @@
     <h2>Job Description</h2>
     <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
 
-    <h3>OR Drag & Drop JD PDF</h3>
+    <h3>Upload JD PDF</h3>
     <div class="drop-zone" id="jdDrop">Drop JD PDF Here</div>
+    <div id="jdFileName" class="file-name"></div>
     <input type="file" id="jd_pdf" hidden accept=".pdf">
 
     <h2>Upload Resume PDFs</h2>
     <div class="drop-zone" id="resumeDrop">Drop Resume PDFs Here</div>
+    <div id="resumeFileName" class="file-name"></div>
     <input type="file" id="pdf" multiple hidden accept=".pdf">
 
     <div class="buttons">
@@ -27,15 +29,13 @@
     </div>
   </div>
 
-  <div class="filter-bar">
-    <input type="text" id="search" placeholder="Search by name..." onkeyup="renderDashboard()">
-    <input type="number" id="minScore" placeholder="Min score %" onkeyup="renderDashboard()">
-    <button onclick="downloadCSV()">Download CSV</button>
+  <!-- Dashboard Layout -->
+  <div class="dashboard">
+    <div class="table-area" id="result"></div>
+    <div class="chart-area">
+      <canvas id="scoreChart"></canvas>
+    </div>
   </div>
-
-  <canvas id="scoreChart" height="100"></canvas>
-
-  <div id="result"></div>
 
   <!-- Modal -->
   <div id="modal" class="modal">
