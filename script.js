@@ -8,11 +8,15 @@ function analyze() {
   })
   .then(res => res.json())
   .then(data => {
-    document.getElementById("result").innerText =
-      JSON.stringify(data, null, 2);
+    document.getElementById("result").innerHTML = `
+      <h2>ATS Score: ${data.score}%</h2>
+      <p><b>Resume Skills:</b> ${data.resume_skills.join(", ")}</p>
+      <p><b>Matched Skills:</b> ${data.matched_skills.join(", ")}</p>
+      <p><b>Missing Skills:</b> ${data.missing_skills.join(", ")}</p>
+    `;
   })
   .catch(err => {
     document.getElementById("result").innerText =
-      "Error: " + err;
+      "Error connecting to server";
   });
 }
