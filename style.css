@@ -168,3 +168,17 @@ td {
   font-size: 28px;
   cursor: pointer;
 }
+
+.drop-zone {
+  border: 2px dashed #0a66c2;
+  padding: 20px;
+  text-align: center;
+  margin: 10px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #f4faff;
+}
+
+.drop-zone:hover {
+  background: #e1f0ff;
+}

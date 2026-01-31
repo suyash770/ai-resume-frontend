@@ -1,6 +1,27 @@
 const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
+let chart;
 
+// ---------- DRAG DROP ----------
+const jdDrop = document.getElementById("jdDrop");
+const resumeDrop = document.getElementById("resumeDrop");
+
+jdDrop.onclick = () => document.getElementById("jd_pdf").click();
+resumeDrop.onclick = () => document.getElementById("pdf").click();
+
+jdDrop.ondrop = (e) => {
+  e.preventDefault();
+  document.getElementById("jd_pdf").files = e.dataTransfer.files;
+};
+
+resumeDrop.ondrop = (e) => {
+  e.preventDefault();
+  document.getElementById("pdf").files = e.dataTransfer.files;
+};
+
+jdDrop.ondragover = resumeDrop.ondragover = (e) => e.preventDefault();
+
+// ---------- ANALYZE ----------
 function analyze() {
   const jdText = document.getElementById("jd").value;
   const jdFile = document.getElementById("jd_pdf").files[0];
@@ -20,15 +41,18 @@ function analyze() {
   }).then(() => loadCandidates());
 }
 
+// ---------- LOAD ----------
 function loadCandidates() {
   fetch(`${BASE_URL}/candidates`)
     .then(res => res.json())
     .then(data => {
       candidateData = data;
       renderDashboard();
+      renderChart();
     });
 }
 
+// ---------- DASHBOARD ----------
 function renderDashboard() {
   const resultDiv = document.getElementById("result");
   const search = document.getElementById("search").value.toLowerCase();
@@ -38,27 +62,6 @@ function renderDashboard() {
     c.name.toLowerCase().includes(search) && c.score >= minScore
   );
 
-  if (filtered.length === 0) {
-    resultDiv.innerHTML = "<h3>No candidates found</h3>";
-    return;
-  }
-
-  // -------- SUMMARY CARDS --------
-  let total = filtered.length;
-  let avg = Math.round(filtered.reduce((a, b) => a + b.score, 0) / total);
-  let best = filtered[0];
-  let worst = filtered[filtered.length - 1];
-
-  let summary = `
-    <div class="summary">
-      <div class="card-box">Total Resumes<br><b>${total}</b></div>
-      <div class="card-box">Average Score<br><b>${avg}%</b></div>
-      <div class="card-box">Best Candidate<br><b>${best.name}</b></div>
-      <div class="card-box">Worst Candidate<br><b>${worst.name}</b></div>
-    </div>
-  `;
-
-  // -------- TABLE --------
   let table = `
     <table>
       <tr>
@@ -72,25 +75,35 @@ function renderDashboard() {
     table += `
       <tr>
         <td>${c.name}</td>
-        <td>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:${c.score}%">
-              ${c.score}%
-            </div>
-          </div>
-        </td>
-        <td>
-          <button onclick='openModal(${JSON.stringify(c)})'>View Details</button>
-        </td>
+        <td>${c.score}%</td>
+        <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
       </tr>
     `;
   });
 
   table += "</table>";
-
-  resultDiv.innerHTML = summary + table;
+  resultDiv.innerHTML = table;
 }
 
+// ---------- CHART ----------
+function renderChart() {
+  const ctx = document.getElementById("scoreChart");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: candidateData.map(c => c.name),
+      datasets: [{
+        label: 'ATS Score',
+        data: candidateData.map(c => c.score),
+      }]
+    }
+  });
+}
+
+// ---------- MODAL ----------
 function openModal(c) {
   const modal = document.getElementById("modal");
   const body = document.getElementById("modalBody");
@@ -119,6 +132,7 @@ function formatSkills(skills, matched) {
   ).join(" ");
 }
 
+// ---------- CSV ----------
 function downloadCSV() {
   let csv = "Name,Score,Matched Skills,Missing Skills\n";
   candidateData.forEach(c => {

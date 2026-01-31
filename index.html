@@ -3,6 +3,7 @@
 <head>
   <title>AI Resume ATS Dashboard</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -12,11 +13,13 @@
     <h2>Job Description</h2>
     <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
 
-    <h3>OR Upload JD PDF</h3>
-    <input type="file" id="jd_pdf" accept=".pdf">
+    <h3>OR Drag & Drop JD PDF</h3>
+    <div class="drop-zone" id="jdDrop">Drop JD PDF Here</div>
+    <input type="file" id="jd_pdf" hidden accept=".pdf">
 
     <h2>Upload Resume PDFs</h2>
-    <input type="file" id="pdf" multiple accept=".pdf">
+    <div class="drop-zone" id="resumeDrop">Drop Resume PDFs Here</div>
+    <input type="file" id="pdf" multiple hidden accept=".pdf">
 
     <div class="buttons">
       <button onclick="analyze()">Analyze Resume</button>
@@ -29,6 +32,8 @@
     <input type="number" id="minScore" placeholder="Min score %" onkeyup="renderDashboard()">
     <button onclick="downloadCSV()">Download CSV</button>
   </div>
+
+  <canvas id="scoreChart" height="100"></canvas>
 
   <div id="result"></div>
 
