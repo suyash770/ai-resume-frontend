@@ -1,5 +1,7 @@
 let candidateData = [];
 
+const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
+
 function analyze() {
   const jdText = document.getElementById("jd").value;
   const jdFile = document.getElementById("jd_pdf").files[0];
@@ -13,14 +15,14 @@ function analyze() {
     formData.append("resume_pdfs", files[i]);
   }
 
-  fetch("https://ai-resume-backend-y87p.onrender.com/predict", {
+  fetch(`${BASE_URL}/predict`, {
     method: "POST",
     body: formData,
   }).then(() => loadCandidates());
 }
 
 function loadCandidates() {
-  fetch("https://ai-resume-backend-y87p.onrender.com/candidates")
+  fetch(`${BASE_URL}/candidates`)
     .then(res => res.json())
     .then(data => {
       candidateData = data;
