@@ -88,3 +88,17 @@ button:disabled {
   background: gray;
   cursor: not-allowed;
 }
+
+.loader {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
