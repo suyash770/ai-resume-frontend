@@ -25,11 +25,11 @@ function loadCandidates() {
     .then(res => res.json())
     .then(data => {
       candidateData = data;
-      renderTable();
+      renderDashboard();
     });
 }
 
-function renderTable() {
+function renderDashboard() {
   const resultDiv = document.getElementById("result");
   const search = document.getElementById("search").value.toLowerCase();
   const minScore = parseInt(document.getElementById("minScore").value) || 0;
@@ -38,6 +38,27 @@ function renderTable() {
     c.name.toLowerCase().includes(search) && c.score >= minScore
   );
 
+  if (filtered.length === 0) {
+    resultDiv.innerHTML = "<h3>No candidates found</h3>";
+    return;
+  }
+
+  // -------- SUMMARY CARDS --------
+  let total = filtered.length;
+  let avg = Math.round(filtered.reduce((a, b) => a + b.score, 0) / total);
+  let best = filtered[0];
+  let worst = filtered[filtered.length - 1];
+
+  let summary = `
+    <div class="summary">
+      <div class="card-box">Total Resumes<br><b>${total}</b></div>
+      <div class="card-box">Average Score<br><b>${avg}%</b></div>
+      <div class="card-box">Best Candidate<br><b>${best.name}</b></div>
+      <div class="card-box">Worst Candidate<br><b>${worst.name}</b></div>
+    </div>
+  `;
+
+  // -------- TABLE --------
   let table = `
     <table>
       <tr>
@@ -59,19 +80,27 @@ function renderTable() {
             </div>
           </div>
         </td>
-        <td>${c.matched}</td>
-        <td>${c.missing}</td>
+        <td>${formatSkills(c.matched, true)}</td>
+        <td>${formatSkills(c.missing, false)}</td>
       </tr>
     `;
   });
 
   table += "</table>";
-  resultDiv.innerHTML = table;
+
+  resultDiv.innerHTML = summary + table;
+}
+
+function formatSkills(skills, matched) {
+  if (!skills) return "";
+  let color = matched ? "skill-match" : "skill-miss";
+  return skills.split(",").map(s =>
+    `<span class="${color}">${s.trim()}</span>`
+  ).join(" ");
 }
 
 function downloadCSV() {
   let csv = "Name,Score,Matched Skills,Missing Skills\n";
-
   candidateData.forEach(c => {
     csv += `${c.name},${c.score},"${c.matched}","${c.missing}"\n`;
   });
