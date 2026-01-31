@@ -230,3 +230,10 @@ function showLoader() {
 function clearResults() {
   document.getElementById("result").innerHTML = "";
 }
+function logoutUser() {
+  fetch(`${BASE_URL}/logout`)
+    .then(() => {
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    });
+}
