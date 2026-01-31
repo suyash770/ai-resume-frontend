@@ -72,3 +72,35 @@ function displayResult(data) {
     </div>
   `;
 }
+
+function loadCandidates() {
+  fetch("https://ai-resume-backend-y87p.onrender.com/candidates")
+    .then(res => res.json())
+    .then(data => {
+      let table = `
+        <div class="score-card">
+        <h2>Candidate Ranking</h2>
+        <table border="1" width="100%" cellpadding="8">
+          <tr>
+            <th>Name</th>
+            <th>Score</th>
+            <th>Matched Skills</th>
+            <th>Missing Skills</th>
+          </tr>
+      `;
+
+      data.forEach(c => {
+        table += `
+          <tr>
+            <td>${c.name}</td>
+            <td>${c.score}%</td>
+            <td>${c.matched}</td>
+            <td>${c.missing}</td>
+          </tr>
+        `;
+      });
+
+      table += "</table></div>";
+      document.getElementById("table").innerHTML = table;
+    });
+}
