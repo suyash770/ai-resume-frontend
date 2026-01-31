@@ -1,14 +1,14 @@
 function analyze() {
-  let resumeText = document.getElementById("resume").value;
   let jdText = document.getElementById("jd").value;
+  let pdfFile = document.getElementById("pdf").files[0];
+
+  let formData = new FormData();
+  formData.append("jd_text", jdText);
+  formData.append("resume_pdf", pdfFile);
 
   fetch("https://ai-resume-backend-y87p.onrender.com/predict", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      resume_text: resumeText,
-      jd_text: jdText
-    })
+    body: formData
   })
   .then(res => res.json())
   .then(data => {
