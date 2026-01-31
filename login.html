@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ATS Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card" style="width:40%; margin-top:100px;">
+  <h2>HR / Admin Login</h2>
+
+  <input type="email" id="email" placeholder="Enter Email" style="width:100%; padding:10px; margin:10px 0;">
+  <input type="password" id="password" placeholder="Enter Password" style="width:100%; padding:10px; margin:10px 0;">
+
+  <button onclick="loginUser()" style="width:100%;">Login</button>
+
+  <p id="msg" style="color:red; margin-top:10px;"></p>
+</div>
+
+<script>
+const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
+
+function loginUser() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  fetch(`${BASE_URL}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.error) {
+      document.getElementById("msg").innerText = "Invalid credentials";
+    } else {
+      localStorage.setItem("user", JSON.stringify(data));
+      window.location.href = "index.html";
+    }
+  });
+}
+</script>
+
+</body>
+</html>
