@@ -9,8 +9,12 @@ function analyze() {
     return;
   }
 
+  // 🧹 CLEAR OLD RESULTS FIRST
+  resultDiv.innerHTML = "";
+
   button.disabled = true;
   button.innerText = "Analyzing...";
+
   resultDiv.innerHTML = "<h3>Processing Resumes...</h3>";
 
   const formData = new FormData();
@@ -25,7 +29,6 @@ function analyze() {
     body: formData,
   })
     .then(() => {
-      // Backend finished — now load ranking
       loadCandidates();
     })
     .catch(() => {
@@ -38,6 +41,9 @@ function analyze() {
 
 function loadCandidates() {
   const resultDiv = document.getElementById("result");
+
+  // 🧹 CLEAR AGAIN BEFORE DRAWING TABLE
+  resultDiv.innerHTML = "";
 
   fetch("https://ai-resume-backend-y87p.onrender.com/candidates")
     .then((res) => res.json())
