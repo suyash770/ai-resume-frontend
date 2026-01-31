@@ -186,21 +186,14 @@ function openModal(c) {
   body.innerHTML = `
     <h2>${c.name}</h2>
     <h3>Score: ${c.score}%</h3>
-
-    <p style="margin:10px 0; font-style:italic;">
-      ${c.explanation}
-    </p>
-
     <h4>Matched Skills</h4>
     ${formatSkills(c.matched, true)}
-
     <h4>Missing Skills</h4>
     ${formatSkills(c.missing, false)}
   `;
 
   modal.style.display = "block";
 }
-
 
 function closeModal() {
   document.getElementById("modal").style.display = "none";
