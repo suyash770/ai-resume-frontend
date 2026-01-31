@@ -237,3 +237,12 @@ function logoutUser() {
       window.location.href = "login.html";
     });
 }
+
+function startNewHiring() {
+  fetch(`${BASE_URL}/reset`, { method: "POST" })
+    .then(() => {
+      clearResults();
+      if (chart) chart.destroy();
+      showToast("New hiring session started 🆕");
+    });
+}
