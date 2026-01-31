@@ -245,3 +245,29 @@ table tr:hover {
   background: #f2f9ff;
   transform: scale(1.01);
 }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #0a66c2;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  display: none;
+  z-index: 2000;
+}
+
+/* Loader */
+.loader {
+  text-align: center;
+  font-weight: bold;
+  margin: 20px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.3; }
+}

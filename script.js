@@ -35,8 +35,10 @@ resumeDrop.ondrop = (e) => {
 
 jdDrop.ondragover = resumeDrop.ondragover = (e) => e.preventDefault();
 
-// ---------- ANALYZE ----------
+// ---------- ANALYZE WITH LOADER ----------
 function analyze() {
+  showLoader();
+
   const jdText = document.getElementById("jd").value;
   const jdFile = document.getElementById("jd_pdf").files[0];
   const files = document.getElementById("pdf").files;
@@ -52,7 +54,14 @@ function analyze() {
   fetch(`${BASE_URL}/predict`, {
     method: "POST",
     body: formData,
-  }).then(() => loadCandidates());
+  })
+    .then(() => {
+      loadCandidates();
+      showToast("Resumes analyzed successfully ✅");
+    })
+    .catch(() => {
+      showToast("Error analyzing resumes ❌");
+    });
 }
 
 // ---------- LOAD ----------
@@ -66,7 +75,7 @@ function loadCandidates() {
     });
 }
 
-// ---------- TABLE WITH COLORS + LEGEND ----------
+// ---------- TABLE WITH COLORS ----------
 function renderTable() {
   const resultDiv = document.getElementById("result");
 
@@ -164,7 +173,19 @@ function downloadCSV() {
   a.click();
 }
 
-// ---------- CLEAR ----------
+// ---------- UI HELPERS ----------
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.innerText = message;
+  toast.style.display = "block";
+  setTimeout(() => toast.style.display = "none", 3000);
+}
+
+function showLoader() {
+  document.getElementById("result").innerHTML =
+    '<div class="loader">Analyzing resumes, please wait...</div>';
+}
+
 function clearResults() {
   document.getElementById("result").innerHTML = "";
 }
