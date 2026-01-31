@@ -24,14 +24,21 @@
     </div>
   </div>
 
-  <!-- 🔍 Search & Filter -->
   <div class="filter-bar">
-    <input type="text" id="search" placeholder="Search by name..." onkeyup="loadCandidates()">
-    <input type="number" id="minScore" placeholder="Min score %" onkeyup="loadCandidates()">
+    <input type="text" id="search" placeholder="Search by name..." onkeyup="renderDashboard()">
+    <input type="number" id="minScore" placeholder="Min score %" onkeyup="renderDashboard()">
     <button onclick="downloadCSV()">Download CSV</button>
   </div>
 
   <div id="result"></div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div id="modalBody"></div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

@@ -6,7 +6,6 @@ function analyze() {
   const files = document.getElementById("pdf").files;
 
   const formData = new FormData();
-
   if (jdFile) formData.append("jd_pdf", jdFile);
   else formData.append("jd_text", jdText);
 
@@ -38,57 +37,45 @@ function renderDashboard() {
     c.name.toLowerCase().includes(search) && c.score >= minScore
   );
 
-  if (filtered.length === 0) {
-    resultDiv.innerHTML = "<h3>No candidates found</h3>";
-    return;
-  }
-
-  // -------- SUMMARY CARDS --------
-  let total = filtered.length;
-  let avg = Math.round(filtered.reduce((a, b) => a + b.score, 0) / total);
-  let best = filtered[0];
-  let worst = filtered[filtered.length - 1];
-
-  let summary = `
-    <div class="summary">
-      <div class="card-box">Total Resumes<br><b>${total}</b></div>
-      <div class="card-box">Average Score<br><b>${avg}%</b></div>
-      <div class="card-box">Best Candidate<br><b>${best.name}</b></div>
-      <div class="card-box">Worst Candidate<br><b>${worst.name}</b></div>
-    </div>
-  `;
-
-  // -------- TABLE --------
   let table = `
     <table>
       <tr>
         <th>Name</th>
         <th>Score</th>
-        <th>Matched Skills</th>
-        <th>Missing Skills</th>
       </tr>
   `;
 
   filtered.forEach(c => {
     table += `
-      <tr>
+      <tr onclick='openModal(${JSON.stringify(c)})' style="cursor:pointer">
         <td>${c.name}</td>
-        <td>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:${c.score}%">
-              ${c.score}%
-            </div>
-          </div>
-        </td>
-        <td>${formatSkills(c.matched, true)}</td>
-        <td>${formatSkills(c.missing, false)}</td>
+        <td>${c.score}%</td>
       </tr>
     `;
   });
 
   table += "</table>";
+  resultDiv.innerHTML = table;
+}
 
-  resultDiv.innerHTML = summary + table;
+function openModal(c) {
+  const modal = document.getElementById("modal");
+  const body = document.getElementById("modalBody");
+
+  body.innerHTML = `
+    <h2>${c.name}</h2>
+    <h3>Score: ${c.score}%</h3>
+    <h4>Matched Skills</h4>
+    ${formatSkills(c.matched, true)}
+    <h4>Missing Skills</h4>
+    ${formatSkills(c.missing, false)}
+  `;
+
+  modal.style.display = "block";
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
 }
 
 function formatSkills(skills, matched) {
