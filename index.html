@@ -13,7 +13,11 @@ if (!localStorage.getItem("user")) {
 
 <body>
 
-  <div class="header">AI Resume ATS Dashboard</div>
+  <div class="header" style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
+  <div>AI Resume ATS Dashboard</div>
+  <button onclick="logoutUser()" style="background:#e74c3c;">Logout</button>
+</div>
+
 
   <div class="card">
     <h2>Job Description</h2>
