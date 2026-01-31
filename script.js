@@ -1,6 +1,5 @@
-let candidateData = [];
-
 const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
+let candidateData = [];
 
 function analyze() {
   const jdText = document.getElementById("jd").value;
@@ -39,25 +38,57 @@ function renderDashboard() {
     c.name.toLowerCase().includes(search) && c.score >= minScore
   );
 
+  if (filtered.length === 0) {
+    resultDiv.innerHTML = "<h3>No candidates found</h3>";
+    return;
+  }
+
+  // -------- SUMMARY CARDS --------
+  let total = filtered.length;
+  let avg = Math.round(filtered.reduce((a, b) => a + b.score, 0) / total);
+  let best = filtered[0];
+  let worst = filtered[filtered.length - 1];
+
+  let summary = `
+    <div class="summary">
+      <div class="card-box">Total Resumes<br><b>${total}</b></div>
+      <div class="card-box">Average Score<br><b>${avg}%</b></div>
+      <div class="card-box">Best Candidate<br><b>${best.name}</b></div>
+      <div class="card-box">Worst Candidate<br><b>${worst.name}</b></div>
+    </div>
+  `;
+
+  // -------- TABLE --------
   let table = `
     <table>
       <tr>
         <th>Name</th>
         <th>Score</th>
+        <th>Details</th>
       </tr>
   `;
 
   filtered.forEach(c => {
     table += `
-      <tr onclick='openModal(${JSON.stringify(c)})' style="cursor:pointer">
+      <tr>
         <td>${c.name}</td>
-        <td>${c.score}%</td>
+        <td>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${c.score}%">
+              ${c.score}%
+            </div>
+          </div>
+        </td>
+        <td>
+          <button onclick='openModal(${JSON.stringify(c)})'>View Details</button>
+        </td>
       </tr>
     `;
   });
 
   table += "</table>";
-  resultDiv.innerHTML = table;
+
+  resultDiv.innerHTML = summary + table;
 }
 
 function openModal(c) {
