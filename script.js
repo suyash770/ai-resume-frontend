@@ -1,12 +1,18 @@
 function analyze() {
   const jdText = document.getElementById("jd").value;
+  const jdFile = document.getElementById("jd_pdf").files[0];
   const files = document.getElementById("pdf").files;
   const resultDiv = document.getElementById("result");
 
   resultDiv.innerHTML = "<h3>Processing Resumes...</h3>";
 
   const formData = new FormData();
-  formData.append("jd_text", jdText);
+
+  if (jdFile) {
+    formData.append("jd_pdf", jdFile);
+  } else {
+    formData.append("jd_text", jdText);
+  }
 
   for (let i = 0; i < files.length; i++) {
     formData.append("resume_pdfs", files[i]);
@@ -40,13 +46,7 @@ function loadCandidates() {
         table += `
           <tr>
             <td>${c.name}</td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width:${c.score}%">
-                  ${c.score}%
-                </div>
-              </div>
-            </td>
+            <td>${c.score}%</td>
             <td>${c.matched}</td>
             <td>${c.missing}</td>
           </tr>
@@ -57,7 +57,6 @@ function loadCandidates() {
       resultDiv.innerHTML = table;
     });
 }
-
 
 function clearResults() {
   document.getElementById("result").innerHTML = "";
