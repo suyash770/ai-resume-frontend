@@ -2,18 +2,6 @@ function analyze() {
   const jdText = document.getElementById("jd").value;
   const files = document.getElementById("pdf").files;
   const resultDiv = document.getElementById("result");
-  const button = document.querySelector("button");
-
-  if (files.length === 0) {
-    resultDiv.innerHTML = "<h3>Please upload Resume PDF</h3>";
-    return;
-  }
-
-  // 🧹 CLEAR OLD RESULTS FIRST
-  resultDiv.innerHTML = "";
-
-  button.disabled = true;
-  button.innerText = "Analyzing...";
 
   resultDiv.innerHTML = "<h3>Processing Resumes...</h3>";
 
@@ -27,30 +15,19 @@ function analyze() {
   fetch("https://ai-resume-backend-y87p.onrender.com/predict", {
     method: "POST",
     body: formData,
-  })
-    .then(() => {
-      loadCandidates();
-    })
-    .catch(() => {
-      resultDiv.innerHTML = "<h3>Error processing resumes</h3>";
-      button.disabled = false;
-      button.innerText = "Analyze Resume";
-    });
+  }).then(() => loadCandidates());
 }
 
 
 function loadCandidates() {
   const resultDiv = document.getElementById("result");
-
-  // 🧹 CLEAR AGAIN BEFORE DRAWING TABLE
   resultDiv.innerHTML = "";
 
   fetch("https://ai-resume-backend-y87p.onrender.com/candidates")
-    .then((res) => res.json())
-    .then((data) => {
+    .then(res => res.json())
+    .then(data => {
       let table = `
-        <h2>Candidate Ranking</h2>
-        <table border="1" cellpadding="10">
+        <table>
           <tr>
             <th>Name</th>
             <th>Score</th>
@@ -59,11 +36,17 @@ function loadCandidates() {
           </tr>
       `;
 
-      data.forEach((c) => {
+      data.forEach(c => {
         table += `
           <tr>
             <td>${c.name}</td>
-            <td>${c.score}%</td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:${c.score}%">
+                  ${c.score}%
+                </div>
+              </div>
+            </td>
             <td>${c.matched}</td>
             <td>${c.missing}</td>
           </tr>
@@ -71,11 +54,11 @@ function loadCandidates() {
       });
 
       table += "</table>";
-
       resultDiv.innerHTML = table;
-
-      const button = document.querySelector("button");
-      button.disabled = false;
-      button.innerText = "Analyze Resume";
     });
+}
+
+
+function clearResults() {
+  document.getElementById("result").innerHTML = "";
 }

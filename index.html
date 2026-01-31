@@ -1,32 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AI Resume ATS</title>
+  <title>AI Resume ATS Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <h1>AI Resume ATS Dashboard</h1>
-</header>
+  <div class="header">AI Resume ATS Dashboard</div>
 
-<div class="container">
   <div class="card">
-    <h3>Job Description</h3>
-    <textarea id="jd" placeholder="Paste job description here..."></textarea>
+    <h2>Job Description</h2>
+    <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
 
-    <h3>Upload Resume PDF</h3>
-    <input type="file" id="pdf" accept=".pdf" multiple>
+    <h2>Upload Resume PDF</h2>
+    <input type="file" id="pdf" multiple accept=".pdf">
 
-    <button onclick="analyze()">Analyze Resume</button>
+    <div class="buttons">
+      <button onclick="analyze()">Analyze Resume</button>
+      <button class="clear-btn" onclick="clearResults()">Clear Results</button>
+    </div>
   </div>
-  <button onclick="loadCandidates()">View Candidate Ranking</button>
-  <div id="table"></div>
-
 
   <div id="result"></div>
-</div>
 
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
