@@ -2,14 +2,13 @@ const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
 let chart;
 
+// ---------- DRAG & DROP ----------
 const jdDrop = document.getElementById("jdDrop");
 const resumeDrop = document.getElementById("resumeDrop");
 
-// Click to open file picker
 jdDrop.onclick = () => document.getElementById("jd_pdf").click();
 resumeDrop.onclick = () => document.getElementById("pdf").click();
 
-// Show filenames
 document.getElementById("jd_pdf").onchange = function () {
   document.getElementById("jdFileName").innerText =
     this.files[0]?.name || "";
@@ -20,7 +19,6 @@ document.getElementById("pdf").onchange = function () {
   document.getElementById("resumeFileName").innerText = names;
 };
 
-// Drag & Drop
 jdDrop.ondrop = (e) => {
   e.preventDefault();
   document.getElementById("jd_pdf").files = e.dataTransfer.files;
@@ -37,7 +35,7 @@ resumeDrop.ondrop = (e) => {
 
 jdDrop.ondragover = resumeDrop.ondragover = (e) => e.preventDefault();
 
-// Analyze
+// ---------- ANALYZE ----------
 function analyze() {
   const jdText = document.getElementById("jd").value;
   const jdFile = document.getElementById("jd_pdf").files[0];
@@ -57,6 +55,7 @@ function analyze() {
   }).then(() => loadCandidates());
 }
 
+// ---------- LOAD ----------
 function loadCandidates() {
   fetch(`${BASE_URL}/candidates`)
     .then(res => res.json())
@@ -67,8 +66,17 @@ function loadCandidates() {
     });
 }
 
+// ---------- TABLE WITH COLORS + LEGEND ----------
 function renderTable() {
   const resultDiv = document.getElementById("result");
+
+  let legend = `
+    <div class="legend">
+      <span class="score-high">● High Match (>80%)</span>
+      <span class="score-mid">● Moderate Match (50–80%)</span>
+      <span class="score-low">● Low Match (<50%)</span>
+    </div>
+  `;
 
   let table = `
     <table>
@@ -80,20 +88,25 @@ function renderTable() {
   `;
 
   candidateData.forEach(c => {
+    let scoreClass =
+      c.score > 80 ? "score-high" :
+      c.score >= 50 ? "score-mid" : "score-low";
+
     table += `
       <tr>
         <td>${c.name}</td>
-        <td>${c.score}%</td>
+        <td class="${scoreClass}">${c.score}%</td>
         <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
       </tr>
     `;
   });
 
   table += "</table>";
-  resultDiv.innerHTML = table;
+
+  resultDiv.innerHTML = legend + table;
 }
 
-// Chart small & clean
+// ---------- CHART ----------
 function renderChart() {
   const ctx = document.getElementById("scoreChart");
 
@@ -115,6 +128,7 @@ function renderChart() {
   });
 }
 
+// ---------- MODAL ----------
 function openModal(c) {
   const modal = document.getElementById("modal");
   const body = document.getElementById("modalBody");
@@ -135,6 +149,22 @@ function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
 
+// ---------- CSV ----------
+function downloadCSV() {
+  let csv = "Name,Score,Matched Skills,Missing Skills\n";
+  candidateData.forEach(c => {
+    csv += `${c.name},${c.score},"${c.matched}","${c.missing}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "candidates.csv";
+  a.click();
+}
+
+// ---------- CLEAR ----------
 function clearResults() {
   document.getElementById("result").innerHTML = "";
 }
