@@ -3,17 +3,16 @@ function analyze() {
 
   fetch("https://ai-resume-backend-y87p.onrender.com/predict", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ resume_text: text })
   })
   .then(res => res.json())
   .then(data => {
-    document.getElementById("result").innerText = "Result: " + data.result;
+    document.getElementById("result").innerText =
+      JSON.stringify(data, null, 2);
   })
   .catch(err => {
-    console.error("Error:", err);
-    alert("Backend not responding. Check Render logs.");
+    document.getElementById("result").innerText =
+      "Error: " + err;
   });
 }
