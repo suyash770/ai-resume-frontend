@@ -184,16 +184,30 @@ function openModal(c) {
   const body = document.getElementById("modalBody");
 
   body.innerHTML = `
-    <h2>${c.name}</h2>
-    <h3>Score: ${c.score}%</h3>
-    <h4>Matched Skills</h4>
-    ${formatSkills(c.matched, true)}
-    <h4>Missing Skills</h4>
-    ${formatSkills(c.missing, false)}
+    <div id="pdfContent">
+      <h2>${c.name}</h2>
+      <h3>ATS Score: ${c.score}%</h3>
+
+      <p style="margin:10px 0; font-style:italic;">
+        ${c.explanation}
+      </p>
+
+      <h4>Matched Skills</h4>
+      ${formatSkills(c.matched, true)}
+
+      <h4>Missing Skills</h4>
+      ${formatSkills(c.missing, false)}
+    </div>
+
+    <br>
+    <button onclick='downloadPDF("${c.name}")'>
+      Download Report (PDF)
+    </button>
   `;
 
   modal.style.display = "block";
 }
+
 
 function closeModal() {
   document.getElementById("modal").style.display = "none";
@@ -245,4 +259,18 @@ function startNewHiring() {
       if (chart) chart.destroy();
       showToast("New hiring session started 🆕");
     });
+}
+
+function downloadPDF(name) {
+  const element = document.getElementById("pdfContent");
+
+  const options = {
+    margin: 0.5,
+    filename: `${name}_ATS_Report.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+
+  html2pdf().set(options).from(element).save();
 }
