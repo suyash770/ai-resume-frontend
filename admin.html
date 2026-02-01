@@ -3,7 +3,16 @@
 <head>
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+const user = JSON.parse(localStorage.getItem("user"));
+
+if (!user || user.role !== "admin") {
+  window.location.href = "login.html";
+}
+</script>
+
 </head>
+
 <body>
 
 <div class="header">Admin Dashboard</div>
