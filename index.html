@@ -17,43 +17,32 @@
 
 <body>
 
-<div class="header" style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
-  <div>AI Resume ATS Dashboard</div>
-  <button onclick="logoutUser()" style="background:#e74c3c;">Logout</button>
+<div class="header">
+  AI Resume ATS Dashboard
+  <button onclick="logoutUser()" style="float:right;background:#e74c3c">Logout</button>
 </div>
 
 <div class="card">
   <h2>Job Description</h2>
   <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
 
-  <div class="drop-zone" id="jdDrop">
-    Upload JD PDF
-  </div>
+  <div class="drop-zone" id="jdDrop">Click to Upload JD PDF</div>
   <input type="file" id="jd_pdf" hidden>
-  <div class="file-name" id="jdFileName"></div>
+  <div id="jdFileName"></div>
 
   <h2>Upload Resumes</h2>
-
-  <div class="drop-zone" id="resumeDrop">
-    Drag & Drop Resume PDFs Here
-  </div>
+  <div class="drop-zone" id="resumeDrop">Click to Upload Resume PDFs</div>
   <input type="file" id="pdf" multiple hidden>
-  <div class="file-name" id="resumeFileName"></div>
+  <div id="resumeFileName"></div>
 
-  <div class="buttons">
-    <button onclick="analyze()">Analyze Resume</button>
-    <button onclick="startNewHiring()" style="background:#555;">Start New Hiring</button>
-  </div>
+  <br>
+  <button onclick="analyze()">Analyze Resume</button>
+  <button onclick="startNewHiring()" style="background:#555;">Start New Hiring</button>
 </div>
 
 <div class="dashboard">
-  <div class="table-area">
-    <div id="result"></div>
-  </div>
-
-  <div class="chart-area">
-    <canvas id="scoreChart"></canvas>
-  </div>
+  <div id="result"></div>
+  <canvas id="scoreChart"></canvas>
 </div>
 
 <div class="card">
@@ -63,7 +52,7 @@
 
 <div id="modal" class="modal">
   <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
+    <span onclick="closeModal()" class="close">&times;</span>
     <div id="modalBody"></div>
   </div>
 </div>

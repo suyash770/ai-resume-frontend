@@ -2,16 +2,37 @@ const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
 let chart;
 
-// ---------------- LOAD ON START ----------------
+// ---------- ON LOAD ----------
 window.onload = () => {
   loadCandidates();
   loadSessions();
+  setupUploads();
 };
 
-// ---------------- ANALYZE ----------------
-function analyze() {
-  showLoader();
+// ---------- UPLOAD HANDLERS ----------
+function setupUploads() {
+  const jdDrop = document.getElementById("jdDrop");
+  const jdInput = document.getElementById("jd_pdf");
+  const resumeDrop = document.getElementById("resumeDrop");
+  const resumeInput = document.getElementById("pdf");
 
+  jdDrop.onclick = () => jdInput.click();
+  resumeDrop.onclick = () => resumeInput.click();
+
+  jdInput.onchange = () => {
+    document.getElementById("jdFileName").innerText =
+      jdInput.files[0]?.name || "";
+  };
+
+  resumeInput.onchange = () => {
+    let names = [];
+    for (let f of resumeInput.files) names.push(f.name);
+    document.getElementById("resumeFileName").innerText = names.join(", ");
+  };
+}
+
+// ---------- ANALYZE ----------
+function analyze() {
   const jdText = document.getElementById("jd").value;
   const jdFile = document.getElementById("jd_pdf").files[0];
   const files = document.getElementById("pdf").files;
@@ -20,50 +41,74 @@ function analyze() {
   if (jdFile) formData.append("jd_pdf", jdFile);
   else formData.append("jd_text", jdText);
 
-  for (let i = 0; i < files.length; i++) {
-    formData.append("resume_pdfs", files[i]);
-  }
+  for (let f of files) formData.append("resume_pdfs", f);
 
-  fetch(`${BASE_URL}/predict`, {
-    method: "POST",
-    body: formData,
-  })
+  fetch(`${BASE_URL}/predict`, { method: "POST", body: formData })
     .then(() => {
       loadCandidates();
       loadSessions();
-      showToast("Resumes analyzed successfully ✅");
+      showToast("Analysis complete ✅");
     });
 }
 
-// ---------------- LOAD CURRENT CANDIDATES ----------------
+// ---------- LOAD CANDIDATES ----------
 function loadCandidates() {
   fetch(`${BASE_URL}/candidates`)
     .then(res => res.json())
     .then(data => {
       candidateData = data;
-      renderDashboard();
+      renderTable();
       renderChart();
     });
 }
 
-// ---------------- HR HISTORY ----------------
+// ---------- RENDER TABLE ----------
+function renderTable() {
+  let html = "<table><tr><th>Name</th><th>Score</th><th>Details</th></tr>";
+
+  candidateData.forEach(c => {
+    html += `
+      <tr>
+        <td>${c.name}</td>
+        <td>${c.score}%</td>
+        <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+  document.getElementById("result").innerHTML = html;
+}
+
+// ---------- CHART ----------
+function renderChart() {
+  const ctx = document.getElementById("scoreChart");
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: candidateData.map(c => c.name),
+      datasets: [{
+        label: "ATS Score",
+        data: candidateData.map(c => c.score)
+      }]
+    }
+  });
+}
+
+// ---------- HR HISTORY ----------
 function loadSessions() {
   fetch(`${BASE_URL}/sessions`)
     .then(res => res.json())
     .then(data => {
       const list = document.getElementById("sessionList");
-      if (!list) return;
-
       list.innerHTML = "";
-
       data.forEach(sid => {
         list.innerHTML += `
-          <li style="margin:8px 0;">
-            <button onclick="loadSession('${sid}')">
-              Open Session ${sid.substring(0, 8)}
-            </button>
-          </li>
-        `;
+          <li><button onclick="loadSession('${sid}')">
+            Session ${sid.substring(0,8)}
+          </button></li>`;
       });
     });
 }
@@ -73,119 +118,42 @@ function loadSession(sid) {
     .then(res => res.json())
     .then(data => {
       candidateData = data;
-      renderDashboard();
+      renderTable();
       renderChart();
-      showToast("Old session loaded");
     });
 }
 
-// ---------------- DASHBOARD ----------------
-function renderDashboard() {
-  const resultDiv = document.getElementById("result");
-
-  let table = `
-    <table>
-      <tr>
-        <th>Name</th>
-        <th>Score</th>
-        <th>Matched Skills</th>
-        <th>Missing Skills</th>
-        <th>Details</th>
-      </tr>
-  `;
-
-  candidateData.forEach(c => {
-    table += `
-      <tr>
-        <td>${c.name}</td>
-        <td>
-          <div class="progress-bar">
-            <div class="progress-fill score-mid" style="width:${c.score}%">
-              ${c.score}%
-            </div>
-          </div>
-        </td>
-        <td>${formatSkills(c.matched, true)}</td>
-        <td>${formatSkills(c.missing, false)}</td>
-        <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
-      </tr>
-    `;
-  });
-
-  table += "</table>";
-  resultDiv.innerHTML = table;
-}
-
-// ---------------- SKILL BADGES ----------------
-function formatSkills(skills, matched) {
-  if (!skills) return "";
-  let color = matched ? "skill-match" : "skill-miss";
-  return skills.split(",").map(s =>
-    `<span class="${color}">${s.trim()}</span>`
-  ).join(" ");
-}
-
-// ---------------- CHART ----------------
-function renderChart() {
-  const ctx = document.getElementById("scoreChart");
-  if (!ctx) return;
-
-  if (chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: candidateData.map(c => c.name),
-      datasets: [{
-        label: 'ATS Score',
-        data: candidateData.map(c => c.score),
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-// ---------------- MODAL + PDF ----------------
+// ---------- MODAL ----------
 function openModal(c) {
-  const modal = document.getElementById("modal");
-  const body = document.getElementById("modalBody");
-
-  body.innerHTML = `
-    <div id="pdfContent">
-      <h2>${c.name}</h2>
-      <h3>ATS Score: ${c.score}%</h3>
-      <p>${c.explanation}</p>
-      <h4>Matched Skills</h4>
-      ${formatSkills(c.matched, true)}
-      <h4>Missing Skills</h4>
-      ${formatSkills(c.missing, false)}
-    </div>
-    <br>
-    <button onclick='downloadPDF("${c.name}")'>Download Report (PDF)</button>
+  document.getElementById("modalBody").innerHTML = `
+    <h2>${c.name}</h2>
+    <p>Score: ${c.score}%</p>
+    <p>${c.explanation}</p>
+    <button onclick="downloadPDF('${c.name}')">Download PDF</button>
   `;
-
-  modal.style.display = "block";
-}
-
-function downloadPDF(name) {
-  const element = document.getElementById("pdfContent");
-  html2pdf().from(element).save(`${name}_ATS_Report.pdf`);
+  document.getElementById("modal").style.display = "block";
 }
 
 function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
 
-// ---------------- UI HELPERS ----------------
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
-  toast.innerText = message;
-  toast.style.display = "block";
-  setTimeout(() => toast.style.display = "none", 3000);
+// ---------- PDF ----------
+function downloadPDF(name) {
+  const element = document.getElementById("modalBody");
+  html2pdf().from(element).save(`${name}_ATS_Report.pdf`);
 }
 
-function showLoader() {
-  document.getElementById("result").innerHTML =
-    '<div class="loader">Analyzing resumes, please wait...</div>';
+// ---------- LOGOUT ----------
+function logoutUser() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+// ---------- TOAST ----------
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.innerText = msg;
+  t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 3000);
 }
