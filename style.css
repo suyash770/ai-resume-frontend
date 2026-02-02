@@ -243,3 +243,15 @@ tr:hover {
 @keyframes blink {
   50% { opacity: 0.3; }
 }
+
+.ats-table { width:100%; border-collapse:collapse; }
+.ats-table th, .ats-table td { padding:12px; border-bottom:1px solid #ddd; }
+
+.progress-bar { background:#eee; border-radius:6px; overflow:hidden; }
+.progress-fill { background:#4CAF50; color:white; text-align:center; }
+
+.skill-match { background:#d4edda; padding:4px 8px; border-radius:4px; margin:2px; display:inline-block; }
+.skill-miss { background:#f8d7da; padding:4px 8px; border-radius:4px; margin:2px; display:inline-block; }
+
+.logout-btn { float:right; background:#e74c3c; }
+.secondary-btn { background:#555; color:white; }

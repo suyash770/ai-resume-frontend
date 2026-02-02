@@ -19,25 +19,24 @@
 
 <div class="header">
   AI Resume ATS Dashboard
-  <button onclick="logoutUser()" style="float:right;background:#e74c3c">Logout</button>
+  <button onclick="logoutUser()" class="logout-btn">Logout</button>
 </div>
 
 <div class="card">
   <h2>Job Description</h2>
   <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
 
-  <div class="drop-zone" id="jdDrop">Click to Upload JD PDF</div>
+  <div class="drop-zone" id="jdDrop">Upload JD PDF</div>
   <input type="file" id="jd_pdf" hidden>
   <div id="jdFileName"></div>
 
   <h2>Upload Resumes</h2>
-  <div class="drop-zone" id="resumeDrop">Click to Upload Resume PDFs</div>
+  <div class="drop-zone" id="resumeDrop">Upload Resume PDFs</div>
   <input type="file" id="pdf" multiple hidden>
   <div id="resumeFileName"></div>
 
-  <br>
   <button onclick="analyze()">Analyze Resume</button>
-  <button onclick="startNewHiring()" style="background:#555;">Start New Hiring</button>
+  <button onclick="startNewHiring()" class="secondary-btn">Start New Hiring</button>
 </div>
 
 <div class="dashboard">

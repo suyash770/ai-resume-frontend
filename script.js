@@ -2,59 +2,53 @@ const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
 let chart;
 
-// ---------- ON LOAD ----------
 window.onload = () => {
+  setupUploads();
   loadCandidates();
   loadSessions();
-  setupUploads();
 };
 
-// ---------- UPLOAD HANDLERS ----------
+// ---------- Upload Handlers ----------
 function setupUploads() {
-  const jdDrop = document.getElementById("jdDrop");
-  const jdInput = document.getElementById("jd_pdf");
-  const resumeDrop = document.getElementById("resumeDrop");
-  const resumeInput = document.getElementById("pdf");
+  jdDrop.onclick = () => jd_pdf.click();
+  resumeDrop.onclick = () => pdf.click();
 
-  jdDrop.onclick = () => jdInput.click();
-  resumeDrop.onclick = () => resumeInput.click();
+  jd_pdf.onchange = () =>
+    jdFileName.innerText = jd_pdf.files[0]?.name || "";
 
-  jdInput.onchange = () => {
-    document.getElementById("jdFileName").innerText =
-      jdInput.files[0]?.name || "";
-  };
-
-  resumeInput.onchange = () => {
-    let names = [];
-    for (let f of resumeInput.files) names.push(f.name);
-    document.getElementById("resumeFileName").innerText = names.join(", ");
+  pdf.onchange = () => {
+    resumeFileName.innerText =
+      [...pdf.files].map(f => f.name).join(", ");
   };
 }
 
-// ---------- ANALYZE ----------
+// ---------- Analyze ----------
 function analyze() {
-  const jdText = document.getElementById("jd").value;
-  const jdFile = document.getElementById("jd_pdf").files[0];
-  const files = document.getElementById("pdf").files;
-
   const formData = new FormData();
+  const jdText = jd.value;
+  const jdFile = jd_pdf.files[0];
+
   if (jdFile) formData.append("jd_pdf", jdFile);
   else formData.append("jd_text", jdText);
 
-  for (let f of files) formData.append("resume_pdfs", f);
+  [...pdf.files].forEach(f =>
+    formData.append("resume_pdfs", f)
+  );
 
-  fetch(`${BASE_URL}/predict`, { method: "POST", body: formData })
-    .then(() => {
-      loadCandidates();
-      loadSessions();
-      showToast("Analysis complete ✅");
-    });
+  fetch(`${BASE_URL}/predict`, {
+    method: "POST",
+    body: formData
+  }).then(() => {
+    loadCandidates();
+    loadSessions();
+    showToast("Analysis Complete ✅");
+  });
 }
 
-// ---------- LOAD CANDIDATES ----------
+// ---------- Load Candidates ----------
 function loadCandidates() {
   fetch(`${BASE_URL}/candidates`)
-    .then(res => res.json())
+    .then(r => r.json())
     .then(data => {
       candidateData = data;
       renderTable();
@@ -62,30 +56,50 @@ function loadCandidates() {
     });
 }
 
-// ---------- RENDER TABLE ----------
+// ---------- Premium Table ----------
 function renderTable() {
-  let html = "<table><tr><th>Name</th><th>Score</th><th>Details</th></tr>";
+  let html = `
+  <table class="ats-table">
+    <tr>
+      <th>Candidate</th>
+      <th>Score</th>
+      <th>Matched</th>
+      <th>Missing</th>
+      <th>Details</th>
+    </tr>`;
 
   candidateData.forEach(c => {
     html += `
       <tr>
         <td>${c.name}</td>
-        <td>${c.score}%</td>
+        <td>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${c.score}%">
+              ${c.score}%
+            </div>
+          </div>
+        </td>
+        <td>${formatSkills(c.matched, true)}</td>
+        <td>${formatSkills(c.missing, false)}</td>
         <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
-      </tr>
-    `;
+      </tr>`;
   });
 
   html += "</table>";
-  document.getElementById("result").innerHTML = html;
+  result.innerHTML = html;
 }
 
-// ---------- CHART ----------
-function renderChart() {
-  const ctx = document.getElementById("scoreChart");
-  if (chart) chart.destroy();
+function formatSkills(skills, good) {
+  const cls = good ? "skill-match" : "skill-miss";
+  return skills.split(",").map(s =>
+    `<span class="${cls}">${s.trim()}</span>`
+  ).join(" ");
+}
 
-  chart = new Chart(ctx, {
+// ---------- Chart ----------
+function renderChart() {
+  if (chart) chart.destroy();
+  chart = new Chart(scoreChart, {
     type: "bar",
     data: {
       labels: candidateData.map(c => c.name),
@@ -97,25 +111,24 @@ function renderChart() {
   });
 }
 
-// ---------- HR HISTORY ----------
+// ---------- HR History ----------
 function loadSessions() {
   fetch(`${BASE_URL}/sessions`)
-    .then(res => res.json())
+    .then(r => r.json())
     .then(data => {
-      const list = document.getElementById("sessionList");
-      list.innerHTML = "";
-      data.forEach(sid => {
-        list.innerHTML += `
-          <li><button onclick="loadSession('${sid}')">
-            Session ${sid.substring(0,8)}
-          </button></li>`;
-      });
+      sessionList.innerHTML = "";
+      data.forEach(s =>
+        sessionList.innerHTML +=
+          `<li><button onclick="loadSession('${s}')">
+            Session ${s.substring(0,8)}
+          </button></li>`
+      );
     });
 }
 
-function loadSession(sid) {
-  fetch(`${BASE_URL}/session/${sid}`)
-    .then(res => res.json())
+function loadSession(id) {
+  fetch(`${BASE_URL}/session/${id}`)
+    .then(r => r.json())
     .then(data => {
       candidateData = data;
       renderTable();
@@ -123,37 +136,33 @@ function loadSession(sid) {
     });
 }
 
-// ---------- MODAL ----------
+// ---------- Modal + PDF ----------
 function openModal(c) {
-  document.getElementById("modalBody").innerHTML = `
+  modalBody.innerHTML = `
     <h2>${c.name}</h2>
-    <p>Score: ${c.score}%</p>
     <p>${c.explanation}</p>
     <button onclick="downloadPDF('${c.name}')">Download PDF</button>
   `;
-  document.getElementById("modal").style.display = "block";
+  modal.style.display = "block";
 }
 
 function closeModal() {
-  document.getElementById("modal").style.display = "none";
+  modal.style.display = "none";
 }
 
-// ---------- PDF ----------
 function downloadPDF(name) {
-  const element = document.getElementById("modalBody");
-  html2pdf().from(element).save(`${name}_ATS_Report.pdf`);
+  html2pdf().from(modalBody).save(`${name}.pdf`);
 }
 
-// ---------- LOGOUT ----------
+// ---------- Logout ----------
 function logoutUser() {
   localStorage.clear();
   window.location.href = "login.html";
 }
 
-// ---------- TOAST ----------
+// ---------- Toast ----------
 function showToast(msg) {
-  const t = document.getElementById("toast");
-  t.innerText = msg;
-  t.style.display = "block";
-  setTimeout(() => t.style.display = "none", 3000);
+  toast.innerText = msg;
+  toast.style.display = "block";
+  setTimeout(() => toast.style.display = "none", 3000);
 }
