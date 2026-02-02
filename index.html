@@ -4,7 +4,6 @@
   <title>AI Resume ATS</title>
   <link rel="stylesheet" href="style.css">
 
-  <!-- Role Protection -->
   <script>
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user || user.role !== "hr") {
@@ -12,39 +11,33 @@
     }
   </script>
 
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- PDF Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
 
-<!-- Header -->
 <div class="header" style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
   <div>AI Resume ATS Dashboard</div>
   <button onclick="logoutUser()" style="background:#e74c3c;">Logout</button>
 </div>
 
-<!-- JD + Resume Upload Card -->
 <div class="card">
   <h2>Job Description</h2>
-
   <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
 
   <div class="drop-zone" id="jdDrop">
     Upload JD PDF
-    <input type="file" id="jd_pdf" hidden>
   </div>
+  <input type="file" id="jd_pdf" hidden>
   <div class="file-name" id="jdFileName"></div>
 
   <h2>Upload Resumes</h2>
 
   <div class="drop-zone" id="resumeDrop">
     Drag & Drop Resume PDFs Here
-    <input type="file" id="pdf" multiple hidden>
   </div>
+  <input type="file" id="pdf" multiple hidden>
   <div class="file-name" id="resumeFileName"></div>
 
   <div class="buttons">
@@ -53,9 +46,7 @@
   </div>
 </div>
 
-<!-- Dashboard Layout -->
 <div class="dashboard">
-
   <div class="table-area">
     <div id="result"></div>
   </div>
@@ -63,16 +54,13 @@
   <div class="chart-area">
     <canvas id="scoreChart"></canvas>
   </div>
-
 </div>
 
-<!-- HR History -->
 <div class="card">
   <h2>Previous Hiring Sessions</h2>
   <ul id="sessionList"></ul>
 </div>
 
-<!-- Modal -->
 <div id="modal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal()">&times;</span>
@@ -80,7 +68,6 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div id="toast" class="toast"></div>
 
 <script src="script.js"></script>
