@@ -8,7 +8,7 @@ window.onload = () => {
   loadSessions();
 };
 
-// ---------- Upload Handlers ----------
+// ---------- Upload wiring ----------
 function setupUploads() {
   jdDrop.onclick = () => jd_pdf.click();
   resumeDrop.onclick = () => pdf.click();
@@ -16,36 +16,29 @@ function setupUploads() {
   jd_pdf.onchange = () =>
     jdFileName.innerText = jd_pdf.files[0]?.name || "";
 
-  pdf.onchange = () => {
-    resumeFileName.innerText =
-      [...pdf.files].map(f => f.name).join(", ");
-  };
+  pdf.onchange = () =>
+    resumeFileName.innerText = [...pdf.files].map(f => f.name).join(", ");
 }
 
 // ---------- Analyze ----------
 function analyze() {
-  const formData = new FormData();
-  const jdText = jd.value;
+  const fd = new FormData();
   const jdFile = jd_pdf.files[0];
 
-  if (jdFile) formData.append("jd_pdf", jdFile);
-  else formData.append("jd_text", jdText);
+  if (jdFile) fd.append("jd_pdf", jdFile);
+  else fd.append("jd_text", jd.value);
 
-  [...pdf.files].forEach(f =>
-    formData.append("resume_pdfs", f)
-  );
+  [...pdf.files].forEach(f => fd.append("resume_pdfs", f));
 
-  fetch(`${BASE_URL}/predict`, {
-    method: "POST",
-    body: formData
-  }).then(() => {
-    loadCandidates();
-    loadSessions();
-    showToast("Analysis Complete ✅");
-  });
+  fetch(`${BASE_URL}/predict`, { method: "POST", body: fd })
+    .then(() => {
+      loadCandidates();
+      loadSessions();
+      showToast("Analysis complete ✅");
+    });
 }
 
-// ---------- Load Candidates ----------
+// ---------- Data ----------
 function loadCandidates() {
   fetch(`${BASE_URL}/candidates`)
     .then(r => r.json())
@@ -59,14 +52,14 @@ function loadCandidates() {
 // ---------- Premium Table ----------
 function renderTable() {
   let html = `
-  <table class="ats-table">
-    <tr>
-      <th>Candidate</th>
-      <th>Score</th>
-      <th>Matched</th>
-      <th>Missing</th>
-      <th>Details</th>
-    </tr>`;
+    <table class="ats-table">
+      <tr>
+        <th>Candidate</th>
+        <th>ATS Score</th>
+        <th>Matched Skills</th>
+        <th>Missing Skills</th>
+        <th>Details</th>
+      </tr>`;
 
   candidateData.forEach(c => {
     html += `
@@ -79,8 +72,8 @@ function renderTable() {
             </div>
           </div>
         </td>
-        <td>${formatSkills(c.matched, true)}</td>
-        <td>${formatSkills(c.missing, false)}</td>
+        <td>${skillBadges(c.matched, true)}</td>
+        <td>${skillBadges(c.missing, false)}</td>
         <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
       </tr>`;
   });
@@ -89,7 +82,8 @@ function renderTable() {
   result.innerHTML = html;
 }
 
-function formatSkills(skills, good) {
+function skillBadges(skills, good) {
+  if (!skills) return "";
   const cls = good ? "skill-match" : "skill-miss";
   return skills.split(",").map(s =>
     `<span class="${cls}">${s.trim()}</span>`
@@ -107,11 +101,12 @@ function renderChart() {
         label: "ATS Score",
         data: candidateData.map(c => c.score)
       }]
-    }
+    },
+    options: { responsive: true }
   });
 }
 
-// ---------- HR History ----------
+// ---------- Sessions ----------
 function loadSessions() {
   fetch(`${BASE_URL}/sessions`)
     .then(r => r.json())
@@ -136,7 +131,7 @@ function loadSession(id) {
     });
 }
 
-// ---------- Modal + PDF ----------
+// ---------- Modal ----------
 function openModal(c) {
   modalBody.innerHTML = `
     <h2>${c.name}</h2>

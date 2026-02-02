@@ -35,13 +35,17 @@
   <input type="file" id="pdf" multiple hidden>
   <div id="resumeFileName"></div>
 
-  <button onclick="analyze()">Analyze Resume</button>
-  <button onclick="startNewHiring()" class="secondary-btn">Start New Hiring</button>
+  <div class="btn-row">
+    <button onclick="analyze()">Analyze Resume</button>
+    <button onclick="startNewHiring()" class="secondary-btn">Start New Hiring</button>
+  </div>
 </div>
 
 <div class="dashboard">
-  <div id="result"></div>
-  <canvas id="scoreChart"></canvas>
+  <div id="result" class="table-area"></div>
+  <div class="chart-area">
+    <canvas id="scoreChart"></canvas>
+  </div>
 </div>
 
 <div class="card">
