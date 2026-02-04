@@ -27,23 +27,23 @@ function loginUser() {
   fetch(`${BASE_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
+    credentials: "include"   // 🔥 VERY IMPORTANT
   })
   .then(res => res.json())
   .then(data => {
-  if (data.error) {
-    document.getElementById("msg").innerText = "Invalid credentials";
-  } else {
-    localStorage.setItem("user", JSON.stringify(data));
-
-    if (data.role === "admin") {
-      window.location.href = "admin.html";
+    if (data.error) {
+      document.getElementById("msg").innerText = "Invalid credentials";
     } else {
-      window.location.href = "index.html";
-    }
-  }
-});
+      localStorage.setItem("user", JSON.stringify(data));
 
+      if (data.role === "admin") {
+        window.location.href = "admin.html";
+      } else {
+        window.location.href = "index.html";
+      }
+    }
+  });
 }
 </script>
 

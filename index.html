@@ -12,7 +12,6 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
@@ -24,7 +23,7 @@
 
 <div class="card">
   <h2>Job Description</h2>
-  <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
+  <textarea id="jd" placeholder="Paste JD here"></textarea>
 
   <div class="drop-zone" id="jdDrop">Upload JD PDF</div>
   <input type="file" id="jd_pdf" hidden>
@@ -35,10 +34,7 @@
   <input type="file" id="pdf" multiple hidden>
   <div id="resumeFileName"></div>
 
-  <div class="btn-row">
-    <button onclick="analyze()">Analyze Resume</button>
-    <button onclick="startNewHiring()" class="secondary-btn">Start New Hiring</button>
-  </div>
+  <button onclick="analyze()">Analyze Resume</button>
 </div>
 
 <div class="dashboard">
@@ -59,8 +55,6 @@
     <div id="modalBody"></div>
   </div>
 </div>
-
-<div id="toast" class="toast"></div>
 
 <script src="script.js"></script>
 </body>
