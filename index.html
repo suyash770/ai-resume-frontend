@@ -1,36 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>AI Resume ATS</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <meta charset="UTF-8">
+    <title>AI Resume ATS Dashboard</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="header">AI Resume ATS Dashboard</div>
+    <header class="topbar">
+        <h1>AI Resume ATS Dashboard</h1>
+    </header>
 
-<div class="card">
-  <textarea id="jd" placeholder="Paste Job Description..."></textarea>
+    <div class="container">
 
-  <input type="file" id="pdf" multiple style="display:none">
-  <input type="file" id="jd_pdf" style="display:none">
+        <!-- JD + Upload Section -->
+        <div class="card upload-card">
+            <textarea id="jd_text" placeholder="Paste Job Description..."></textarea>
 
-  <button onclick="analyze()">Analyze Resume</button>
-</div>
+            <div class="upload-row">
+                <!-- JD PDF -->
+                <label class="upload-btn">
+                    Choose JD PDF
+                    <input type="file" id="jd_pdf" style="display:none">
+                </label>
+                <span id="jd_name"></span>
 
-<div class="dashboard">
-  <div id="result"></div>
-  <canvas id="scoreChart"></canvas>
-</div>
+                <!-- Resume PDFs (MULTIPLE) -->
+                <label class="upload-btn">
+                    Choose Resume PDFs
+                    <input type="file" id="pdf" multiple style="display:none">
+                </label>
+                <span id="file_name"></span>
 
-<div id="modal" class="modal">
-  <div class="modal-content">
-    <span onclick="closeModal()" class="close">&times;</span>
-    <div id="modalBody"></div>
-  </div>
-</div>
+                <button id="analyzeBtn" class="analyze-btn">Analyze Resume</button>
+            </div>
+        </div>
 
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>Total Resumes</h3>
+                <p id="totalResumes">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Average Score</h3>
+                <p id="avgScore">0%</p>
+            </div>
+            <div class="summary-card">
+                <h3>Best Candidate</h3>
+                <p id="bestCandidate">-</p>
+            </div>
+            <div class="summary-card">
+                <h3>Worst Candidate</h3>
+                <p id="worstCandidate">-</p>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-card">
+            <canvas id="scoreChart"></canvas>
+        </div>
+
+        <!-- Results Table -->
+        <div class="table-card">
+            <div class="legend">
+                <span class="high">High Match (>80%)</span>
+                <span class="moderate">Moderate Match (50–80%)</span>
+                <span class="low">Low Match (<50%)</span>
+            </div>
+
+            <table id="resultTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Matched Skills</th>
+                        <th>Missing Skills</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody">
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
