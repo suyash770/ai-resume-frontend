@@ -3,50 +3,25 @@
 <head>
   <title>AI Resume ATS</title>
   <link rel="stylesheet" href="style.css">
-
-  <script>
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user || user.role !== "hr") {
-      window.location.href = "login.html";
-    }
-  </script>
-
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-
 <body>
 
-<div class="header">
-  AI Resume ATS Dashboard
-  <button onclick="logoutUser()" class="logout-btn">Logout</button>
-</div>
+<div class="header">AI Resume ATS Dashboard</div>
 
 <div class="card">
-  <h2>Job Description</h2>
-  <textarea id="jd" placeholder="Paste JD here"></textarea>
+  <textarea id="jd" placeholder="Paste Job Description..."></textarea>
 
-  <div class="drop-zone" id="jdDrop">Upload JD PDF</div>
-  <input type="file" id="jd_pdf" hidden>
-  <div id="jdFileName"></div>
-
-  <h2>Upload Resumes</h2>
-  <div class="drop-zone" id="resumeDrop">Upload Resume PDFs</div>
-  <input type="file" id="pdf" multiple hidden>
-  <div id="resumeFileName"></div>
+  <input type="file" id="jd_pdf">
+  <input type="file" id="pdf" multiple>
 
   <button onclick="analyze()">Analyze Resume</button>
 </div>
 
 <div class="dashboard">
-  <div id="result" class="table-area"></div>
-  <div class="chart-area">
-    <canvas id="scoreChart"></canvas>
-  </div>
-</div>
-
-<div class="card">
-  <h2>Previous Hiring Sessions</h2>
-  <ul id="sessionList"></ul>
+  <div id="result"></div>
+  <canvas id="scoreChart"></canvas>
 </div>
 
 <div id="modal" class="modal">

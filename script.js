@@ -2,183 +2,231 @@ const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
 let chart;
 
-window.onload = () => {
-  setupUploads();
-  loadCandidates();
-  loadSessions();
+// ---------------- DRAG & DROP ----------------
+const jdDrop = document.getElementById("jdDrop");
+const resumeDrop = document.getElementById("resumeDrop");
+
+jdDrop.onclick = () => document.getElementById("jd_pdf").click();
+resumeDrop.onclick = () => document.getElementById("pdf").click();
+
+document.getElementById("jd_pdf").onchange = function () {
+  document.getElementById("jdFileName").innerText = this.files[0]?.name || "";
 };
 
-// ---------- Upload Wiring ----------
-function setupUploads() {
-  const jdDrop = document.getElementById("jdDrop");
-  const jdInput = document.getElementById("jd_pdf");
-  const resumeDrop = document.getElementById("resumeDrop");
-  const resumeInput = document.getElementById("pdf");
+document.getElementById("pdf").onchange = function () {
+  let names = Array.from(this.files).map(f => f.name).join(", ");
+  document.getElementById("resumeFileName").innerText = names;
+};
 
-  jdDrop.onclick = () => jdInput.click();
-  resumeDrop.onclick = () => resumeInput.click();
+jdDrop.ondrop = (e) => {
+  e.preventDefault();
+  document.getElementById("jd_pdf").files = e.dataTransfer.files;
+  document.getElementById("jdFileName").innerText = e.dataTransfer.files[0].name;
+};
 
-  jdInput.onchange = () =>
-    document.getElementById("jdFileName").innerText =
-      jdInput.files[0]?.name || "";
+resumeDrop.ondrop = (e) => {
+  e.preventDefault();
+  document.getElementById("pdf").files = e.dataTransfer.files;
+  let names = Array.from(e.dataTransfer.files).map(f => f.name).join(", ");
+  document.getElementById("resumeFileName").innerText = names;
+};
 
-  resumeInput.onchange = () =>
-    document.getElementById("resumeFileName").innerText =
-      [...resumeInput.files].map(f => f.name).join(", ");
-}
+jdDrop.ondragover = resumeDrop.ondragover = (e) => e.preventDefault();
 
-// ---------- Analyze ----------
+// ---------------- ANALYZE ----------------
 function analyze() {
-  const jd = document.getElementById("jd");
-  const jdInput = document.getElementById("jd_pdf");
-  const resumeInput = document.getElementById("pdf");
+  showLoader();
 
-  const fd = new FormData();
+  const jdText = document.getElementById("jd").value;
+  const jdFile = document.getElementById("jd_pdf").files[0];
+  const files = document.getElementById("pdf").files;
 
-  if (jdInput.files[0])
-    fd.append("jd_pdf", jdInput.files[0]);
-  else
-    fd.append("jd_text", jd.value);
+  const formData = new FormData();
+  if (jdFile) formData.append("jd_pdf", jdFile);
+  else formData.append("jd_text", jdText);
 
-  [...resumeInput.files].forEach(f =>
-    fd.append("resume_pdfs", f)
-  );
+  for (let i = 0; i < files.length; i++) {
+    formData.append("resume_pdfs", files[i]);
+  }
 
   fetch(`${BASE_URL}/predict`, {
     method: "POST",
-    body: fd,
-    credentials: "include"
-  }).then(() => {
-    loadCandidates();
-    loadSessions();
-  });
+    body: formData,
+  })
+    .then(() => {
+      loadCandidates();
+      showToast("Resumes analyzed successfully ✅");
+    })
+    .catch(() => showToast("Error analyzing resumes ❌"));
 }
 
-// ---------- Load Candidates ----------
+// ---------------- LOAD ----------------
 function loadCandidates() {
-  fetch(`${BASE_URL}/candidates`, {
-    credentials: "include"
-  })
-    .then(r => r.json())
+  fetch(`${BASE_URL}/candidates`)
+    .then(res => res.json())
     .then(data => {
       candidateData = data;
-      renderTable();
+      renderDashboard();
       renderChart();
     });
 }
 
-// ---------- Render Table ----------
-function renderTable() {
-  const result = document.getElementById("result");
+// ---------------- DASHBOARD (ALL FEATURES) ----------------
+function renderDashboard() {
+  const resultDiv = document.getElementById("result");
+  const search = (document.getElementById("search")?.value || "").toLowerCase();
+  const minScore = parseInt(document.getElementById("minScore")?.value) || 0;
 
-  let html = `
-    <table class="ats-table">
+  let filtered = candidateData.filter(c =>
+    c.name.toLowerCase().includes(search) && c.score >= minScore
+  );
+
+  if (filtered.length === 0) {
+    resultDiv.innerHTML = "<h3>No candidates found</h3>";
+    return;
+  }
+
+  // -------- SUMMARY CARDS --------
+  let total = filtered.length;
+  let avg = Math.round(filtered.reduce((a, b) => a + b.score, 0) / total);
+  let best = filtered.reduce((a, b) => a.score > b.score ? a : b);
+  let worst = filtered.reduce((a, b) => a.score < b.score ? a : b);
+
+  let summary = `
+    <div class="summary">
+      <div class="card-box">Total Resumes<br><b>${total}</b></div>
+      <div class="card-box">Average Score<br><b>${avg}%</b></div>
+      <div class="card-box">Best Candidate<br><b>${best.name}</b></div>
+      <div class="card-box">Worst Candidate<br><b>${worst.name}</b></div>
+    </div>
+  `;
+
+  // -------- LEGEND --------
+  let legend = `
+    <div class="legend">
+      <span class="score-high">● High Match (>80%)</span>
+      <span class="score-mid">● Moderate Match (50–80%)</span>
+      <span class="score-low">● Low Match (<50%)</span>
+    </div>
+  `;
+
+  // -------- TABLE --------
+  let table = `
+    <table>
       <tr>
         <th>Name</th>
         <th>Score</th>
-        <th>Matched</th>
-        <th>Missing</th>
+        <th>Matched Skills</th>
+        <th>Missing Skills</th>
         <th>Details</th>
-      </tr>`;
+      </tr>
+  `;
 
-  candidateData.forEach(c => {
-    html += `
+  filtered.forEach(c => {
+    let scoreClass =
+      c.score > 80 ? "score-high" :
+      c.score >= 50 ? "score-mid" : "score-low";
+
+    table += `
       <tr>
         <td>${c.name}</td>
         <td>
           <div class="progress-bar">
-            <div class="progress-fill" style="width:${c.score}%">
+            <div class="progress-fill ${scoreClass}" style="width:${c.score}%">
               ${c.score}%
             </div>
           </div>
         </td>
-        <td>${skills(c.matched, true)}</td>
-        <td>${skills(c.missing, false)}</td>
-        <td>
-          <button onclick='openModal(${JSON.stringify(c)})'>
-            View
-          </button>
-        </td>
-      </tr>`;
+        <td>${formatSkills(c.matched, true)}</td>
+        <td>${formatSkills(c.missing, false)}</td>
+        <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
+      </tr>
+    `;
   });
 
-  html += "</table>";
-  result.innerHTML = html;
+  table += "</table>";
+
+  resultDiv.innerHTML = summary + legend + table;
 }
 
-function skills(s, good) {
-  if (!s) return "";
-  const cls = good ? "skill-match" : "skill-miss";
-  return s.split(",").map(x =>
-    `<span class="${cls}">${x.trim()}</span>`
+// ---------------- SKILL BADGES ----------------
+function formatSkills(skills, matched) {
+  if (!skills) return "";
+  let color = matched ? "skill-match" : "skill-miss";
+  return skills.split(",").map(s =>
+    `<span class="${color}">${s.trim()}</span>`
   ).join(" ");
 }
 
-// ---------- Chart ----------
+// ---------------- CHART ----------------
 function renderChart() {
   const ctx = document.getElementById("scoreChart");
+  if (!ctx) return;
+
   if (chart) chart.destroy();
 
   chart = new Chart(ctx, {
-    type: "bar",
+    type: 'bar',
     data: {
       labels: candidateData.map(c => c.name),
       datasets: [{
-        label: "ATS Score",
-        data: candidateData.map(c => c.score)
+        label: 'ATS Score',
+        data: candidateData.map(c => c.score),
       }]
-    }
+    },
+    options: { responsive: true, maintainAspectRatio: false }
   });
 }
 
-// ---------- Sessions ----------
-function loadSessions() {
-  const list = document.getElementById("sessionList");
-
-  fetch(`${BASE_URL}/sessions`, {
-    credentials: "include"
-  })
-    .then(r => r.json())
-    .then(data => {
-      list.innerHTML = "";
-      data.forEach(s => {
-        list.innerHTML += `
-          <li>
-            <button onclick="loadSession('${s}')">
-              ${s.substring(0,8)}
-            </button>
-          </li>`;
-      });
-    });
-}
-
-function loadSession(id) {
-  fetch(`${BASE_URL}/session/${id}`, {
-    credentials: "include"
-  })
-    .then(r => r.json())
-    .then(data => {
-      candidateData = data;
-      renderTable();
-      renderChart();
-    });
-}
-
-// ---------- Modal ----------
+// ---------------- MODAL ----------------
 function openModal(c) {
-  document.getElementById("modalBody").innerHTML = `
+  const modal = document.getElementById("modal");
+  const body = document.getElementById("modalBody");
+
+  body.innerHTML = `
     <h2>${c.name}</h2>
-    <p>${c.explanation}</p>
+    <h3>Score: ${c.score}%</h3>
+    <h4>Matched Skills</h4>
+    ${formatSkills(c.matched, true)}
+    <h4>Missing Skills</h4>
+    ${formatSkills(c.missing, false)}
   `;
-  document.getElementById("modal").style.display = "block";
+
+  modal.style.display = "block";
 }
 
 function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
 
-// ---------- Logout ----------
-function logoutUser() {
-  localStorage.clear();
-  window.location.href = "login.html";
+// ---------------- CSV ----------------
+function downloadCSV() {
+  let csv = "Name,Score,Matched Skills,Missing Skills\n";
+  candidateData.forEach(c => {
+    csv += `${c.name},${c.score},"${c.matched}","${c.missing}"\n`;
+  });
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "candidates.csv";
+  a.click();
+}
+
+// ---------------- UI HELPERS ----------------
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.innerText = message;
+  toast.style.display = "block";
+  setTimeout(() => toast.style.display = "none", 3000);
+}
+
+function showLoader() {
+  document.getElementById("result").innerHTML =
+    '<div class="loader">Analyzing resumes, please wait...</div>';
+}
+
+function clearResults() {
+  document.getElementById("result").innerHTML = "";
 }
