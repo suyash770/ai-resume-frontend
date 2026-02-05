@@ -2,38 +2,43 @@ const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
 let chart;
 
-// ---------------- DRAG & DROP ----------------
+// ---------- FILE HELPERS ----------
+function addFiles(input, newFiles) {
+  const dt = new DataTransfer();
+
+  for (let f of input.files) dt.items.add(f);
+  for (let f of newFiles) dt.items.add(f);
+
+  input.files = dt.files;
+}
+
+// ---------- DRAG & DROP FIXED ----------
 const jdDrop = document.getElementById("jdDrop");
 const resumeDrop = document.getElementById("resumeDrop");
 
 jdDrop.onclick = () => document.getElementById("jd_pdf").click();
 resumeDrop.onclick = () => document.getElementById("pdf").click();
 
-document.getElementById("jd_pdf").onchange = function () {
-  document.getElementById("jdFileName").innerText = this.files[0]?.name || "";
-};
-
-document.getElementById("pdf").onchange = function () {
-  let names = Array.from(this.files).map(f => f.name).join(", ");
-  document.getElementById("resumeFileName").innerText = names;
-};
-
 jdDrop.ondrop = (e) => {
   e.preventDefault();
-  document.getElementById("jd_pdf").files = e.dataTransfer.files;
-  document.getElementById("jdFileName").innerText = e.dataTransfer.files[0].name;
+  addFiles(document.getElementById("jd_pdf"), e.dataTransfer.files);
+  document.getElementById("jdFileName").innerText =
+    document.getElementById("jd_pdf").files[0]?.name || "";
 };
 
 resumeDrop.ondrop = (e) => {
   e.preventDefault();
-  document.getElementById("pdf").files = e.dataTransfer.files;
-  let names = Array.from(e.dataTransfer.files).map(f => f.name).join(", ");
+  addFiles(document.getElementById("pdf"), e.dataTransfer.files);
+
+  let names = Array.from(document.getElementById("pdf").files)
+    .map(f => f.name).join(", ");
+
   document.getElementById("resumeFileName").innerText = names;
 };
 
 jdDrop.ondragover = resumeDrop.ondragover = (e) => e.preventDefault();
 
-// ---------------- ANALYZE ----------------
+// ---------- ANALYZE ----------
 function analyze() {
   showLoader();
 
@@ -60,7 +65,7 @@ function analyze() {
     .catch(() => showToast("Error analyzing resumes ❌"));
 }
 
-// ---------------- LOAD ----------------
+// ---------- LOAD ----------
 function loadCandidates() {
   fetch(`${BASE_URL}/candidates`)
     .then(res => res.json())
@@ -71,26 +76,14 @@ function loadCandidates() {
     });
 }
 
-// ---------------- DASHBOARD (ALL FEATURES) ----------------
+// ---------- DASHBOARD ----------
 function renderDashboard() {
   const resultDiv = document.getElementById("result");
-  const search = (document.getElementById("search")?.value || "").toLowerCase();
-  const minScore = parseInt(document.getElementById("minScore")?.value) || 0;
 
-  let filtered = candidateData.filter(c =>
-    c.name.toLowerCase().includes(search) && c.score >= minScore
-  );
-
-  if (filtered.length === 0) {
-    resultDiv.innerHTML = "<h3>No candidates found</h3>";
-    return;
-  }
-
-  // -------- SUMMARY CARDS --------
-  let total = filtered.length;
-  let avg = Math.round(filtered.reduce((a, b) => a + b.score, 0) / total);
-  let best = filtered.reduce((a, b) => a.score > b.score ? a : b);
-  let worst = filtered.reduce((a, b) => a.score < b.score ? a : b);
+  let total = candidateData.length;
+  let avg = Math.round(candidateData.reduce((a, b) => a + b.score, 0) / total);
+  let best = candidateData.reduce((a, b) => a.score > b.score ? a : b);
+  let worst = candidateData.reduce((a, b) => a.score < b.score ? a : b);
 
   let summary = `
     <div class="summary">
@@ -101,16 +94,6 @@ function renderDashboard() {
     </div>
   `;
 
-  // -------- LEGEND --------
-  let legend = `
-    <div class="legend">
-      <span class="score-high">● High Match (>80%)</span>
-      <span class="score-mid">● Moderate Match (50–80%)</span>
-      <span class="score-low">● Low Match (<50%)</span>
-    </div>
-  `;
-
-  // -------- TABLE --------
   let table = `
     <table>
       <tr>
@@ -122,7 +105,7 @@ function renderDashboard() {
       </tr>
   `;
 
-  filtered.forEach(c => {
+  candidateData.forEach(c => {
     let scoreClass =
       c.score > 80 ? "score-high" :
       c.score >= 50 ? "score-mid" : "score-low";
@@ -146,10 +129,10 @@ function renderDashboard() {
 
   table += "</table>";
 
-  resultDiv.innerHTML = summary + legend + table;
+  resultDiv.innerHTML = summary + table;
 }
 
-// ---------------- SKILL BADGES ----------------
+// ---------- SKILL BADGES ----------
 function formatSkills(skills, matched) {
   if (!skills) return "";
   let color = matched ? "skill-match" : "skill-miss";
@@ -158,7 +141,7 @@ function formatSkills(skills, matched) {
   ).join(" ");
 }
 
-// ---------------- CHART ----------------
+// ---------- CHART ----------
 function renderChart() {
   const ctx = document.getElementById("scoreChart");
   if (!ctx) return;
@@ -178,7 +161,7 @@ function renderChart() {
   });
 }
 
-// ---------------- MODAL ----------------
+// ---------- MODAL ----------
 function openModal(c) {
   const modal = document.getElementById("modal");
   const body = document.getElementById("modalBody");
@@ -199,21 +182,7 @@ function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
 
-// ---------------- CSV ----------------
-function downloadCSV() {
-  let csv = "Name,Score,Matched Skills,Missing Skills\n";
-  candidateData.forEach(c => {
-    csv += `${c.name},${c.score},"${c.matched}","${c.missing}"\n`;
-  });
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "candidates.csv";
-  a.click();
-}
-
-// ---------------- UI HELPERS ----------------
+// ---------- UI HELPERS ----------
 function showToast(message) {
   const toast = document.getElementById("toast");
   if (!toast) return;
@@ -225,8 +194,4 @@ function showToast(message) {
 function showLoader() {
   document.getElementById("result").innerHTML =
     '<div class="loader">Analyzing resumes, please wait...</div>';
-}
-
-function clearResults() {
-  document.getElementById("result").innerHTML = "";
 }
