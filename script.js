@@ -195,3 +195,18 @@ function showLoader() {
   document.getElementById("result").innerHTML =
     '<div class="loader">Analyzing resumes, please wait...</div>';
 }
+// Show selected JD PDF name
+document.getElementById("jd_pdf").addEventListener("change", function () {
+    const file = this.files[0];
+    document.getElementById("jd_name").innerText =
+        file ? "JD: " + file.name : "";
+});
+
+// Show selected Resume PDF names (MULTIPLE)
+document.getElementById("pdf").addEventListener("change", function () {
+    const files = Array.from(this.files);
+    document.getElementById("file_name").innerText =
+        files.length > 0
+            ? "Resumes: " + files.map(f => f.name).join(", ")
+            : "";
+});
