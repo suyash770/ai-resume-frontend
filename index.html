@@ -1,92 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>AI Resume ATS Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>AI Resume ATS Dashboard</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header class="topbar">
-        <h1>AI Resume ATS Dashboard</h1>
-    </header>
+<div class="header">AI Resume ATS Dashboard</div>
 
-    <div class="container">
+<div class="card">
 
-        <!-- JD + Upload Section -->
-        <div class="card upload-card">
-            <textarea id="jd_text" placeholder="Paste Job Description..."></textarea>
+  <!-- Job Description -->
+  <h3>Job Description</h3>
+  <textarea id="jdText" placeholder="Paste Job Description..."></textarea>
 
-            <div class="upload-row">
-                <!-- JD PDF -->
-                <label class="upload-btn">
-                    Choose JD PDF
-                    <input type="file" id="jd_pdf" style="display:none">
-                </label>
-                <span id="jd_name"></span>
+  <!-- JD PDF Upload -->
+  <div class="drop-zone" onclick="document.getElementById('jdPdf').click()">
+    📄 Upload JD PDF (optional)
+    <input type="file" id="jdPdf" accept=".pdf" hidden>
+  </div>
+  <div id="jdFileName" class="file-name"></div>
 
-                <!-- Resume PDFs (MULTIPLE) -->
-                <label class="upload-btn">
-                    Choose Resume PDFs
-                    <input type="file" id="pdf" multiple style="display:none">
-                </label>
-                <span id="file_name"></span>
+  <!-- Resume Upload -->
+  <div class="drop-zone" onclick="document.getElementById('resumePdfs').click()">
+    📑 Upload Resume PDFs (multiple allowed)
+    <input type="file" id="resumePdfs" accept=".pdf" multiple hidden>
+  </div>
+  <div id="resumeFileNames" class="file-name"></div>
 
-                <button id="analyzeBtn" class="analyze-btn">Analyze Resume</button>
-            </div>
-        </div>
+  <!-- Buttons -->
+  <div class="buttons">
+    <button onclick="analyzeResumes()">Analyze Resume</button>
+    <button class="clear-btn" onclick="clearAll()">Clear</button>
+  </div>
 
-        <!-- Summary Cards -->
-        <div class="summary-cards">
-            <div class="summary-card">
-                <h3>Total Resumes</h3>
-                <p id="totalResumes">0</p>
-            </div>
-            <div class="summary-card">
-                <h3>Average Score</h3>
-                <p id="avgScore">0%</p>
-            </div>
-            <div class="summary-card">
-                <h3>Best Candidate</h3>
-                <p id="bestCandidate">-</p>
-            </div>
-            <div class="summary-card">
-                <h3>Worst Candidate</h3>
-                <p id="worstCandidate">-</p>
-            </div>
-        </div>
+</div>
 
-        <!-- Chart Section -->
-        <div class="chart-card">
-            <canvas id="scoreChart"></canvas>
-        </div>
+<!-- Loader -->
+<div id="loader" class="loader" style="display:none;">Processing resumes...</div>
 
-        <!-- Results Table -->
-        <div class="table-card">
-            <div class="legend">
-                <span class="high">High Match (>80%)</span>
-                <span class="moderate">Moderate Match (50–80%)</span>
-                <span class="low">Low Match (<50%)</span>
-            </div>
+<!-- Dashboard -->
+<div class="dashboard">
 
-            <table id="resultTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Score</th>
-                        <th>Matched Skills</th>
-                        <th>Missing Skills</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody id="resultBody">
-                </tbody>
-            </table>
-        </div>
-
+  <div class="table-area">
+    <div class="summary">
+      <div class="card-box">Total Resumes<br><span id="totalCount">0</span></div>
+      <div class="card-box">Average Score<br><span id="avgScore">0%</span></div>
+      <div class="card-box">Best Candidate<br><span id="bestCandidate">-</span></div>
+      <div class="card-box">Worst Candidate<br><span id="worstCandidate">-</span></div>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Score</th>
+          <th>Matched Skills</th>
+          <th>Missing Skills</th>
+        </tr>
+      </thead>
+      <tbody id="resultTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
 <script src="script.js"></script>
 </body>
 </html>

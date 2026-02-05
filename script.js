@@ -1,212 +1,116 @@
-const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
-let candidateData = [];
-let chart;
+const BACKEND_URL = "https://ai-resume-backend-w44h.onrender.com";
 
-// ---------- FILE HELPERS ----------
-function addFiles(input, newFiles) {
-  const dt = new DataTransfer();
+const jdPdfInput = document.getElementById("jdPdf");
+const resumeInput = document.getElementById("resumePdfs");
 
-  for (let f of input.files) dt.items.add(f);
-  for (let f of newFiles) dt.items.add(f);
-
-  input.files = dt.files;
-}
-
-// ---------- DRAG & DROP FIXED ----------
-const jdDrop = document.getElementById("jdDrop");
-const resumeDrop = document.getElementById("resumeDrop");
-
-jdDrop.onclick = () => document.getElementById("jd_pdf").click();
-resumeDrop.onclick = () => document.getElementById("pdf").click();
-
-jdDrop.ondrop = (e) => {
-  e.preventDefault();
-  addFiles(document.getElementById("jd_pdf"), e.dataTransfer.files);
+jdPdfInput.addEventListener("change", () => {
   document.getElementById("jdFileName").innerText =
-    document.getElementById("jd_pdf").files[0]?.name || "";
-};
+    jdPdfInput.files.length ? jdPdfInput.files[0].name : "";
+});
 
-resumeDrop.ondrop = (e) => {
-  e.preventDefault();
-  addFiles(document.getElementById("pdf"), e.dataTransfer.files);
+resumeInput.addEventListener("change", () => {
+  const names = Array.from(resumeInput.files).map(f => f.name);
+  document.getElementById("resumeFileNames").innerText = names.join(", ");
+});
 
-  let names = Array.from(document.getElementById("pdf").files)
-    .map(f => f.name).join(", ");
+async function analyzeResumes() {
+  const jdText = document.getElementById("jdText").value.trim();
+  const resumes = resumeInput.files;
 
-  document.getElementById("resumeFileName").innerText = names;
-};
-
-jdDrop.ondragover = resumeDrop.ondragover = (e) => e.preventDefault();
-
-// ---------- ANALYZE ----------
-function analyze() {
-  showLoader();
-
-  const jdText = document.getElementById("jd").value;
-  const jdFile = document.getElementById("jd_pdf").files[0];
-  const files = document.getElementById("pdf").files;
-
-  const formData = new FormData();
-  if (jdFile) formData.append("jd_pdf", jdFile);
-  else formData.append("jd_text", jdText);
-
-  for (let i = 0; i < files.length; i++) {
-    formData.append("resume_pdfs", files[i]);
+  if (!jdText && jdPdfInput.files.length === 0) {
+    alert("Please provide Job Description text or PDF");
+    return;
   }
 
-  fetch(`${BASE_URL}/predict`, {
-    method: "POST",
-    body: formData,
-  })
-    .then(() => {
-      loadCandidates();
-      showToast("Resumes analyzed successfully ✅");
-    })
-    .catch(() => showToast("Error analyzing resumes ❌"));
-}
+  if (resumes.length === 0) {
+    alert("Please upload at least one resume PDF");
+    return;
+  }
 
-// ---------- LOAD ----------
-function loadCandidates() {
-  fetch(`${BASE_URL}/candidates`)
-    .then(res => res.json())
-    .then(data => {
-      candidateData = data;
-      renderDashboard();
-      renderChart();
+  document.getElementById("loader").style.display = "block";
+
+  const formData = new FormData();
+  formData.append("jd_text", jdText);
+
+  if (jdPdfInput.files.length) {
+    formData.append("jd_pdf", jdPdfInput.files[0]);
+  }
+
+  for (let file of resumes) {
+    formData.append("resume_pdfs", file);
+  }
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/predict`, {
+      method: "POST",
+      body: formData
     });
+
+    const data = await res.json();
+    loadCandidates();
+  } catch (err) {
+    alert("Server error. Check backend.");
+    console.error(err);
+  }
+
+  document.getElementById("loader").style.display = "none";
 }
 
-// ---------- DASHBOARD ----------
-function renderDashboard() {
-  const resultDiv = document.getElementById("result");
+async function loadCandidates() {
+  const res = await fetch(`${BACKEND_URL}/candidates`);
+  const data = await res.json();
 
-  let total = candidateData.length;
-  let avg = Math.round(candidateData.reduce((a, b) => a + b.score, 0) / total);
-  let best = candidateData.reduce((a, b) => a.score > b.score ? a : b);
-  let worst = candidateData.reduce((a, b) => a.score < b.score ? a : b);
+  const table = document.getElementById("resultTable");
+  table.innerHTML = "";
 
-  let summary = `
-    <div class="summary">
-      <div class="card-box">Total Resumes<br><b>${total}</b></div>
-      <div class="card-box">Average Score<br><b>${avg}%</b></div>
-      <div class="card-box">Best Candidate<br><b>${best.name}</b></div>
-      <div class="card-box">Worst Candidate<br><b>${worst.name}</b></div>
-    </div>
-  `;
+  let total = data.length;
+  let sum = 0;
+  let best = data[0];
+  let worst = data[0];
 
-  let table = `
-    <table>
-      <tr>
-        <th>Name</th>
-        <th>Score</th>
-        <th>Matched Skills</th>
-        <th>Missing Skills</th>
-        <th>Details</th>
-      </tr>
-  `;
+  data.forEach(c => {
+    sum += c.score;
+    if (c.score > best.score) best = c;
+    if (c.score < worst.score) worst = c;
 
-  candidateData.forEach(c => {
-    let scoreClass =
-      c.score > 80 ? "score-high" :
-      c.score >= 50 ? "score-mid" : "score-low";
-
-    table += `
+    table.innerHTML += `
       <tr>
         <td>${c.name}</td>
         <td>
           <div class="progress-bar">
-            <div class="progress-fill ${scoreClass}" style="width:${c.score}%">
-              ${c.score}%
-            </div>
+            <div class="progress-fill ${getScoreClass(c.score)}"
+                 style="width:${c.score}%">${c.score}%</div>
           </div>
         </td>
-        <td>${formatSkills(c.matched, true)}</td>
-        <td>${formatSkills(c.missing, false)}</td>
-        <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
-      </tr>
-    `;
+        <td>${formatSkills(c.matched, "match")}</td>
+        <td>${formatSkills(c.missing, "miss")}</td>
+      </tr>`;
   });
 
-  table += "</table>";
-
-  resultDiv.innerHTML = summary + table;
+  document.getElementById("totalCount").innerText = total;
+  document.getElementById("avgScore").innerText = total ? Math.round(sum / total) + "%" : "0%";
+  document.getElementById("bestCandidate").innerText = best?.name || "-";
+  document.getElementById("worstCandidate").innerText = worst?.name || "-";
 }
 
-// ---------- SKILL BADGES ----------
-function formatSkills(skills, matched) {
-  if (!skills) return "";
-  let color = matched ? "skill-match" : "skill-miss";
-  return skills.split(",").map(s =>
-    `<span class="${color}">${s.trim()}</span>`
+function getScoreClass(score) {
+  if (score >= 80) return "score-high";
+  if (score >= 50) return "score-mid";
+  return "score-low";
+}
+
+function formatSkills(skills, type) {
+  if (!skills || !skills.length) return "-";
+  return skills.map(s =>
+    `<span class="skill-${type}">${s}</span>`
   ).join(" ");
 }
 
-// ---------- CHART ----------
-function renderChart() {
-  const ctx = document.getElementById("scoreChart");
-  if (!ctx) return;
-
-  if (chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: candidateData.map(c => c.name),
-      datasets: [{
-        label: 'ATS Score',
-        data: candidateData.map(c => c.score),
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
+function clearAll() {
+  document.getElementById("jdText").value = "";
+  jdPdfInput.value = "";
+  resumeInput.value = "";
+  document.getElementById("jdFileName").innerText = "";
+  document.getElementById("resumeFileNames").innerText = "";
+  document.getElementById("resultTable").innerHTML = "";
 }
-
-// ---------- MODAL ----------
-function openModal(c) {
-  const modal = document.getElementById("modal");
-  const body = document.getElementById("modalBody");
-
-  body.innerHTML = `
-    <h2>${c.name}</h2>
-    <h3>Score: ${c.score}%</h3>
-    <h4>Matched Skills</h4>
-    ${formatSkills(c.matched, true)}
-    <h4>Missing Skills</h4>
-    ${formatSkills(c.missing, false)}
-  `;
-
-  modal.style.display = "block";
-}
-
-function closeModal() {
-  document.getElementById("modal").style.display = "none";
-}
-
-// ---------- UI HELPERS ----------
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
-  toast.innerText = message;
-  toast.style.display = "block";
-  setTimeout(() => toast.style.display = "none", 3000);
-}
-
-function showLoader() {
-  document.getElementById("result").innerHTML =
-    '<div class="loader">Analyzing resumes, please wait...</div>';
-}
-// Show selected JD PDF name
-document.getElementById("jd_pdf").addEventListener("change", function () {
-    const file = this.files[0];
-    document.getElementById("jd_name").innerText =
-        file ? "JD: " + file.name : "";
-});
-
-// Show selected Resume PDF names (MULTIPLE)
-document.getElementById("pdf").addEventListener("change", function () {
-    const files = Array.from(this.files);
-    document.getElementById("file_name").innerText =
-        files.length > 0
-            ? "Resumes: " + files.map(f => f.name).join(", ")
-            : "";
-});
