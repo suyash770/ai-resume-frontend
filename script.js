@@ -2,19 +2,16 @@ const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
 let scoreChart;
 
-// 1. SESSION PROTECTION & REDIRECT
-// Ensures users cannot bypass the login page
+// 1. SESSION PROTECTION
 if (!localStorage.getItem("loggedInUser") && !window.location.href.includes("login.html")) {
     window.location.href = "login.html";
 }
 
 /**
- * INITIALIZATION & STYLISH GREETING
+ * INITIALIZATION & NAVIGATION
  */
 function checkLogin() {
     let user = localStorage.getItem("loggedInUser") || "User";
-    
-    // Formatting the name to be more stylish (Capitalized)
     const formattedName = user.charAt(0).toUpperCase() + user.slice(1);
     
     document.getElementById("welcomeName").innerText = formattedName;
@@ -28,23 +25,18 @@ function closeWelcome() {
     document.getElementById("welcomePopup").style.display = "none";
 }
 
-/**
- * NAVIGATION & SIDEBAR INTERACTIVITY
- */
-// Making "Candidates" and "Settings" buttons interactive
+// Sidebar Navigation Handling
 document.querySelectorAll('.side-nav li').forEach(item => {
     item.addEventListener('click', function() {
         document.querySelectorAll('.side-nav li').forEach(li => li.classList.remove('active'));
         this.classList.add('active');
         
         const page = this.innerText.toLowerCase();
-        
         if (page.includes("candidates")) {
             alert("Switching to Candidates Management View...");
         } else if (page.includes("settings")) {
             alert("Opening System Settings...");
         } else if (page.includes("dashboard")) {
-            // Reload to main dashboard view
             window.location.href = "index.html"; 
         }
     });
@@ -56,7 +48,6 @@ document.querySelectorAll('.side-nav li').forEach(item => {
 const jdInput = document.getElementById("jd_pdf");
 const resumeInput = document.getElementById("pdf");
 
-// Linking custom sidebar boxes to hidden file inputs
 document.getElementById("jdDrop").onclick = () => jdInput.click();
 document.getElementById("resumeDrop").onclick = () => resumeInput.click();
 
@@ -77,12 +68,11 @@ async function analyze() {
     const jdFile = jdInput.files[0];
     const resumes = resumeInput.files;
 
-    if (resumes.length === 0) return alert("Please upload at least one resume! ❗");
+    if (resumes.length === 0) return alert("Please upload at least one resume!");
     
     document.getElementById("loader").style.display = "flex";
 
     const formData = new FormData();
-    // Synchronizing keys with the backend
     if (jdFile) formData.append("jd_pdf", jdFile);
     else formData.append("jd_text", jdText);
 
@@ -91,18 +81,13 @@ async function analyze() {
     }
 
     try {
-        const response = await fetch(`${BASE_URL}/predict`, { 
-            method: "POST", 
-            body: formData 
-        });
-        
+        const response = await fetch(`${BASE_URL}/predict`, { method: "POST", body: formData });
         if (response.ok) {
             await loadCandidates();
             alert("Analysis successful! ✅");
         }
     } catch (err) {
-        console.error("Fetch error:", err);
-        alert("Server error. Check if your backend is running.");
+        alert("Error connecting to backend ❌");
     } finally {
         document.getElementById("loader").style.display = "none";
     }
@@ -120,7 +105,7 @@ async function loadCandidates() {
 }
 
 /**
- * UI RENDERING & DASHBOARD DATA
+ * UI RENDERING
  */
 function renderDashboard() {
     const tableBody = document.getElementById("resultTable");
@@ -150,20 +135,37 @@ function renderDashboard() {
 }
 
 function getScoreColor(score) {
-    if (score > 80) return "#22c55e"; // Green
-    if (score >= 50) return "#f59e0b"; // Amber
-    return "#ef4444"; // Red
+    if (score > 80) return "#22c55e"; 
+    if (score >= 50) return "#f59e0b"; 
+    return "#ef4444"; 
 }
 
 function formatSkills(skills) {
     if (!skills) return "No matches";
-    return skills.split(",").map(s => 
-        `<span class="skill-tag" style="background:#f5f3ff; color:#7c3aed; padding:2px 8px; border-radius:12px; font-size:11px; margin:2px; display:inline-block;">${s.trim()}</span>`
-    ).join("");
+    return skills.split(",").map(s => `<span class="skill-tag">${s.trim()}</span>`).join("");
 }
 
 /**
- * DATA EXPORT & VISUALS
+ * MODAL LOGIC (REPLACING ALERTS)
+ */
+function viewDetails(c) {
+    document.getElementById("modalCandidateName").innerText = c.name;
+    document.getElementById("modalScore").innerText = c.score;
+    document.getElementById("modalExplanation").innerText = c.explanation;
+    document.getElementById("detailsModal").style.display = "flex";
+}
+
+function closeModal() {
+    document.getElementById("detailsModal").style.display = "none";
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById("detailsModal");
+    if (event.target == modal) closeModal();
+}
+
+/**
+ * UTILITIES
  */
 function downloadReport() {
     if (candidateData.length === 0) return alert("No data to export!");
@@ -180,40 +182,26 @@ function downloadReport() {
 function updateChart() {
     const ctx = document.getElementById('scoreChart').getContext('2d');
     if (scoreChart) scoreChart.destroy();
-    
     scoreChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: candidateData.map(c => c.name),
             datasets: [{
-                label: 'ATS Match Score (%)',
+                label: 'ATS Match Score',
                 data: candidateData.map(c => c.score),
                 backgroundColor: '#7c3aed',
-                borderRadius: 6
+                borderRadius: 5
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true, max: 100 } }
-        }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
-/**
- * AUTHENTICATION & UTILITIES
- */
 function logout() {
     localStorage.removeItem("loggedInUser");
     window.location.href = "login.html";
 }
 
 function clearAll() {
-    if(confirm("Confirm reset? This will clear the current analysis.")) {
-        location.reload();
-    }
-}
-
-function viewDetails(c) {
-    alert(`Candidate: ${c.name}\nScore: ${c.score}%\n\nExplanation: ${c.explanation}`);
+    if(confirm("Confirm reset?")) location.reload();
 }

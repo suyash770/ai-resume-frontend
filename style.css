@@ -482,3 +482,49 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color
   background: #f5f3ff;
   color: #7c3aed;
 }
+/* Make Job Description area smaller */
+#jd {
+  height: 100px; /* Reduced from 150px */
+  font-size: 0.85rem;
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+}
+
+/* Professional Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.7); /* Dark semi-transparent */
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-card {
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease-out;
+}
+
+.score-badge {
+  display: inline-block;
+  background: #f5f3ff;
+  color: #7c3aed;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
