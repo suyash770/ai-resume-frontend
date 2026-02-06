@@ -3,7 +3,7 @@ let candidateData = [];
 let scoreChart;
 
 // 1. SESSION & ROLE PROTECTION
-// Validates user session and role-based access
+// Retrieves session data to ensure the user is logged in and authorized
 const sessionData = JSON.parse(localStorage.getItem("userSession"));
 
 if (!sessionData || !sessionData.isLoggedIn) {
@@ -12,7 +12,7 @@ if (!sessionData || !sessionData.isLoggedIn) {
     }
 }
 
-// Initialize EmailJS
+// Initialize EmailJS for automated candidate notifications
 (function() {
     if (typeof emailjs !== 'undefined') {
         emailjs.init("YOUR_PUBLIC_KEY"); 
@@ -26,8 +26,10 @@ function checkLogin() {
     const session = JSON.parse(localStorage.getItem("userSession"));
     if (!session) return;
 
+    // Formatting the username for a professional UI aesthetic
     const formattedName = session.name.charAt(0).toUpperCase() + session.name.slice(1);
     
+    // Load persisted profile data from local storage
     const savedProfile = JSON.parse(localStorage.getItem("userProfile"));
     const savedAvatar = localStorage.getItem("userAvatar");
     
@@ -52,12 +54,14 @@ function checkLogin() {
 }
 
 /**
- * ROLE-SPECIFIC SESSION CHECKS
+ * ROLE-SPECIFIC SESSION VALIDATION
  */
 function checkAdminSession() {
     const session = JSON.parse(localStorage.getItem("userSession"));
     if (!session || session.role !== 'admin') window.location.href = "login.html";
     checkLogin();
+    loadCandidates(); // Syncs global metrics
+    fetchLogs();      // Pulls historical activity from SQL
 }
 
 function checkCandidateSession() {
@@ -68,43 +72,28 @@ function checkCandidateSession() {
 }
 
 /**
- * PROFILE INTERFACE
+ * ADMIN PANEL: FETCH ACTIVITY LOGS
  */
-function toggleProfileView() {
-    const profile = document.getElementById("profileSection");
-    const dashboard = document.getElementById("dashboardContent");
-    if (!profile) return;
+async function fetchLogs() {
+    try {
+        const res = await fetch(`${BASE_URL}/admin/logs`);
+        const logs = await res.json();
+        const logTable = document.getElementById("adminLogsTable");
+        if (!logTable) return;
 
-    const isHidden = profile.style.display === "none";
-    profile.style.display = isHidden ? "block" : "none";
-    if (dashboard) dashboard.style.opacity = isHidden ? "0.2" : "1";
-}
-
-function previewImage(event) {
-    const reader = new FileReader();
-    reader.onload = function() {
-        if (document.getElementById('profilePicPreview')) document.getElementById('profilePicPreview').src = reader.result;
-        if (document.getElementById('navAvatar')) document.getElementById('navAvatar').src = reader.result;
-        localStorage.setItem("userAvatar", reader.result);
-    }
-    reader.readAsDataURL(event.target.files[0]);
-}
-
-function saveProfile() {
-    const profileData = {
-        name: document.getElementById("profileFullName").value,
-        role: document.getElementById("profileRole").value,
-        dob: document.getElementById("profileDOB").value,
-        email: document.getElementById("profileEmail").value
-    };
-    localStorage.setItem("userProfile", JSON.stringify(profileData));
-    document.getElementById("userNameDisplay").innerText = profileData.name || "User";
-    alert("Profile Updated Successfully! ✅");
-    toggleProfileView();
+        // Injects database logs into the Admin UI table
+        logTable.innerHTML = logs.map(log => `
+            <tr>
+                <td>${log.user_email}</td>
+                <td>${log.action}</td>
+                <td style="color:#64748b; font-size:0.8rem;">${log.timestamp}</td>
+            </tr>
+        `).join("");
+    } catch (err) { console.error("Log fetch error:", err); }
 }
 
 /**
- * HR PANEL LOGIC
+ * HR PANEL: CORE ANALYSIS
  */
 async function analyze() {
     const jdText = document.getElementById("jd").value;
@@ -114,6 +103,9 @@ async function analyze() {
     document.getElementById("analysisLoader").style.display = "flex";
 
     const formData = new FormData();
+    // Passes user email to the backend for activity logging
+    formData.append("hr_email", sessionData.email); 
+
     if (document.getElementById("jd_pdf").files[0]) {
         formData.append("jd_pdf", document.getElementById("jd_pdf").files[0]);
     } else {
@@ -126,23 +118,32 @@ async function analyze() {
         const response = await fetch(`${BASE_URL}/predict`, { method: "POST", body: formData });
         if (response.ok) {
             await loadCandidates();
-            alert("Analysis complete! ✅");
+            alert("Analysis successful and logged to database! ✅");
         }
-    } catch (err) { alert("Server error ❌"); }
+    } catch (err) { alert("Server error during analysis ❌"); }
     finally { document.getElementById("analysisLoader").style.display = "none"; }
 }
 
 async function loadCandidates() {
-    const res = await fetch(`${BASE_URL}/candidates`);
-    candidateData = await res.json();
-    renderDashboard();
-    updateChart();
-    // Update admin stats if on admin page
-    if (document.getElementById("adminTotalRuns")) {
-        document.getElementById("adminTotalRuns").innerText = candidateData.length;
-    }
+    try {
+        const res = await fetch(`${BASE_URL}/candidates`);
+        candidateData = await res.json();
+        renderDashboard();
+        updateChart();
+        
+        // Updates Admin Panel statistics directly from the database
+        if (document.getElementById("adminTotalRuns")) {
+            const statsRes = await fetch(`${BASE_URL}/admin/stats`);
+            const stats = await statsRes.json();
+            document.getElementById("adminTotalRuns").innerText = stats.total_runs;
+            document.getElementById("adminTotalUsers").innerText = stats.total_users;
+        }
+    } catch (err) { console.error("Data synchronization error:", err); }
 }
 
+/**
+ * DASHBOARD UI RENDERING
+ */
 function renderDashboard() {
     const tableBody = document.getElementById("resultTable");
     if (!tableBody || !candidateData.length) return;
@@ -169,12 +170,13 @@ function renderDashboard() {
 }
 
 /**
- * EMAIL & MODAL LOGIC
+ * EMAIL & MODAL AUTOMATION
  */
 function openEmailModal(c) {
     const emailField = document.getElementById("emailTo");
     emailField.value = c.email || ""; 
     
+    // Dynamic content generation based on ATS match score
     if (c.score > 70) {
         document.getElementById("emailSubject").value = "Interview Invitation - " + c.name;
         document.getElementById("emailMessage").value = `Hi ${c.name},\n\nYour profile is a match (${c.score}%). We'd like to interview you.\n\nBest,\n${sessionData.name}`;
@@ -196,12 +198,12 @@ function sendEmail() {
     };
     emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", params)
         .then(() => { alert("Email sent! 📧"); closeEmailModal(); })
-        .catch(() => alert("Email failed ❌"))
+        .catch(() => alert("Email failed to send ❌"))
         .finally(() => btn.innerText = "Send Email Now");
 }
 
 /**
- * CANDIDATE SUBMISSION
+ * CANDIDATE SUBMISSION LOGIC
  */
 async function submitApplication() {
     const resume = document.getElementById("pdf").files[0];
@@ -210,7 +212,7 @@ async function submitApplication() {
     document.getElementById("loader").style.display = "flex";
     const formData = new FormData();
     formData.append("resume_pdfs", resume);
-    formData.append("jd_text", "Requirements for technical proficiency and professional experience.");
+    formData.append("jd_text", "Technical evaluation for role matching.");
 
     try {
         const response = await fetch(`${BASE_URL}/predict`, { method: "POST", body: formData });
@@ -221,13 +223,36 @@ async function submitApplication() {
             document.getElementById("matchScoreDisplay").innerText = result.score + "%";
             document.getElementById("matchFeedback").innerText = result.explanation;
         }
-    } catch (err) { alert("Server error ❌"); }
+    } catch (err) { alert("Submission failed ❌"); }
     finally { document.getElementById("loader").style.display = "none"; }
 }
 
 /**
  * UTILITIES
  */
+function toggleProfileView() {
+    const profile = document.getElementById("profileSection");
+    const dashboard = document.getElementById("dashboardContent");
+    if (!profile) return;
+
+    const isHidden = profile.style.display === "none";
+    profile.style.display = isHidden ? "block" : "none";
+    if (dashboard) dashboard.style.opacity = isHidden ? "0.2" : "1";
+}
+
+function saveProfile() {
+    const profileData = {
+        name: document.getElementById("profileFullName").value,
+        role: document.getElementById("profileRole").value,
+        dob: document.getElementById("profileDOB").value,
+        email: document.getElementById("profileEmail").value
+    };
+    localStorage.setItem("userProfile", JSON.stringify(profileData));
+    document.getElementById("userNameDisplay").innerText = profileData.name || "User";
+    alert("Profile saved successfully! ✅");
+    toggleProfileView();
+}
+
 function viewDetails(c) {
     document.getElementById("modalCandidateName").innerText = c.name;
     document.getElementById("modalScore").innerText = c.score;
@@ -246,11 +271,7 @@ function logout() {
     window.location.href = "login.html";
 }
 
-function clearAll() {
-    if(confirm("Confirm reset?")) location.reload();
-}
-
-// Global Triggers
+// Sidebar Interaction Listeners
 if (document.getElementById("jdDrop")) {
     document.getElementById("jdDrop").onclick = () => document.getElementById("jd_pdf").click();
     document.getElementById("resumeDrop").onclick = () => document.getElementById("pdf").click();
@@ -267,7 +288,8 @@ function updateChart() {
         type: 'bar',
         data: {
             labels: candidateData.map(c => c.name),
-            datasets: [{ label: 'Score', data: candidateData.map(c => c.score), backgroundColor: '#7c3aed', borderRadius: 5 }]
-        }
+            datasets: [{ label: 'ATS Match Score (%)', data: candidateData.map(c => c.score), backgroundColor: '#7c3aed', borderRadius: 5 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }

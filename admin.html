@@ -32,13 +32,13 @@
     </header>
 
     <div class="metrics-row">
-      <div class="m-card">Total Users<span id="adminTotalUsers">3</span></div>
+      <div class="m-card">Total Users<span id="adminTotalUsers">0</span></div>
       <div class="m-card">Active Panels<span id="adminActivePanels">3</span></div>
       <div class="m-card">Analyses Run<span id="adminTotalRuns">0</span></div>
       <div class="m-card">Server Status<span style="color:#22c55e;">Online</span></div>
     </div>
 
-    <div class="data-grid" style="grid-template-columns: 1fr;">
+    <div class="data-grid" style="grid-template-columns: 1fr; margin-bottom: 2rem;">
       <div class="table-container">
         <h3>User Distribution</h3>
         <table style="margin-top: 1rem;">
@@ -70,6 +70,26 @@
               <td><button class="btn-view" disabled>Current</button></td>
             </tr>
           </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="data-grid" style="grid-template-columns: 1fr;">
+      <div class="table-container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>System Activity Logs</h3>
+            <button onclick="fetchLogs()" class="btn-export" style="font-size: 0.8rem;">Refresh Logs</button>
+        </div>
+        <table style="margin-top: 1rem;">
+          <thead>
+            <tr>
+              <th>User Email</th>
+              <th>Action Performed</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="adminLogsTable">
+            </tbody>
         </table>
       </div>
     </div>
