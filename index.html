@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Professional AI Resume ATS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Professional AI Resume ATS Dashboard</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body onload="checkLogin()">
 
 <div class="app-layout">
-  <nav class="side-nav">
+  <aside class="side-nav">
     <div class="logo">ATS Pro</div>
     <ul>
       <li class="active">📊 Dashboard</li>
@@ -19,40 +20,53 @@
     </ul>
     
     <div class="sidebar-inputs">
+       <h3>Job Description</h3>
        <textarea id="jd" placeholder="Paste Job Description..."></textarea>
-       <div id="jdDrop" class="upload-box">JD PDF</div>
+       
+       <div id="jdDrop" class="upload-box">📄 JD PDF (Optional)</div>
        <input type="file" id="jd_pdf" hidden>
-       <div id="resumeDrop" class="upload-box">Resumes</div>
+       <div id="jdFileName" class="file-name"></div>
+
+       <div id="resumeDrop" class="upload-box">📑 Upload Resumes</div>
        <input type="file" id="pdf" multiple hidden>
+       <div id="resumeFileNames" class="file-name"></div>
+       
        <button onclick="analyze()" class="btn-glow">Run Analysis</button>
+       <button onclick="clearAll()" class="btn-clear-side">Clear All</button>
     </div>
-  </nav>
+  </aside>
 
   <main class="main-body">
     <header class="top-bar">
       <h2>Recruitment Overview</h2>
       <div class="user-profile">
         <span id="userNameDisplay">HR Manager</span>
-        <button onclick="logout()">Logout</button>
+        <button onclick="logout()" class="btn-logout">Logout</button>
       </div>
     </header>
 
     <div class="metrics-row">
-      <div class="m-card">Total<br><span id="totalCount">0</span></div>
-      <div class="m-card">Avg. Score<br><span id="avgScore">0%</span></div>
-      <div class="m-card">Best Match<br><span id="bestCandidate">-</span></div>
-      <div class="m-card">Export<br><button onclick="downloadReport()">CSV</button></div>
+      <div class="m-card">Total Resumes<span id="totalCount">0</span></div>
+      <div class="m-card">Avg. Match Score<span id="avgScore">0%</span></div>
+      <div class="m-card">Best Candidate<span id="bestCandidate">-</span></div>
+      <div class="m-card">Report<br><button onclick="downloadReport()" class="btn-export">Export CSV</button></div>
     </div>
 
     <div class="data-grid">
       <div class="table-container">
         <table>
           <thead>
-            <tr><th>Name</th><th>Score</th><th>Matched Skills</th></tr>
+            <tr>
+              <th>Candidate Name</th>
+              <th>Match Score</th>
+              <th>Skills Identified</th>
+              <th>Action</th>
+            </tr>
           </thead>
           <tbody id="resultTable"></tbody>
         </table>
       </div>
+      
       <div class="chart-container">
         <canvas id="scoreChart"></canvas>
       </div>
@@ -60,11 +74,16 @@
   </main>
 </div>
 
+<div id="loader" class="loader-overlay" style="display:none;">
+    <div class="loader-spinner"></div>
+    <p>Analyzing Resumes...</p>
+</div>
+
 <div id="welcomePopup" class="welcome-modal">
   <div class="welcome-content">
     <h2>👋 Welcome, <span id="welcomeName">User</span>!</h2>
-    <p>Ready to find your next star candidate?</p>
-    <button onclick="closeWelcome()">Let's Go</button>
+    <p>Your AI Resume Screening dashboard is ready.</p>
+    <button onclick="closeWelcome()" class="btn-glow">Start Screening</button>
   </div>
 </div>
 

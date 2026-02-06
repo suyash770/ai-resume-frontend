@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | ATS Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .login-container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+        }
+        .login-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-card h1 { color: #7c3aed; margin-bottom: 0.5rem; font-weight: 800; }
+        .login-card p { color: #64748b; margin-bottom: 2rem; }
+        .login-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .login-btn {
+            width: 100%;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-btn:hover { background: #6d28d9; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <h1>ATS Pro</h1>
+            <p>Enter your name to access the dashboard</p>
+            <div class="login-form">
+                <input type="text" id="nameInput" placeholder="Your Name" required>
+                <button onclick="handleLogin()" class="login-btn">Enter Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleLogin() {
+            const name = document.getElementById('nameInput').value;
+            if (name.trim() === "") {
+                alert("Please enter your name");
+                return;
+            }
+            // Save name for the dashboard to use 
+            localStorage.setItem("loggedInUser", name);
+            // Redirect to your main project file 
+            window.location.href = "index.html"; 
+        }
+    </script>
+</body>
+</html>
