@@ -234,3 +234,43 @@ tr:hover {
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
 }
+
+:root {
+  --primary: #0a66c2;
+  --bg: #f3f6f9;
+  --success: #22c55e;
+  --danger: #ef4444;
+}
+
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+.header { background: var(--primary); color: white; padding: 20px; text-align: center; font-weight: bold; font-size: 24px; }
+
+.card { width: 85%; margin: 25px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+.drop-zone { border: 2px dashed #cbd5e1; padding: 30px; text-align: center; margin: 15px 0; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+.drop-zone:hover { background: #f0f7ff; border-color: var(--primary); }
+
+.buttons { display: flex; gap: 10px; }
+button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.clear-btn { background: white; color: var(--danger); border: 1px solid var(--danger); }
+.download-btn { background: var(--success) !important; font-size: 14px; }
+
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 20px 0; }
+.card-box { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-bottom: 4px solid var(--primary); }
+.card-box span { font-size: 20px; font-weight: bold; color: var(--primary); }
+
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; }
+th { background: #f8fafc; color: #64748b; padding: 15px; text-align: left; }
+td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+
+.progress-bar { background: #e2e8f0; border-radius: 10px; height: 8px; width: 100%; overflow: hidden; }
+.progress-fill { height: 100%; }
+.score-high { background: var(--success); }
+.score-mid { background: #f59e0b; }
+.score-low { background: var(--danger); }
+
+.skill-match { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 2px; display: inline-block; }
+.skill-miss { background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 2px; display: inline-block; }
+
+.loader { text-align: center; padding: 20px; font-weight: bold; color: var(--primary); animation: pulse 1.5s infinite; }
+@keyframes pulse { 50% { opacity: 0.5; } }

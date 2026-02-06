@@ -3,111 +3,112 @@ let candidateData = [];
 let scoreChart;
 
 // ---------- FILE HELPERS ----------
-function addFiles(input, newFiles) {
-  const dt = new DataTransfer();
-  for (let f of input.files) dt.items.add(f);
-  for (let f of newFiles) dt.items.add(f);
-  input.files = dt.files;
-}
+const jdInput = document.getElementById("jd_pdf");
+const resumeInput = document.getElementById("pdf");
 
-// ---------- DRAG & DROP ----------
-const jdDrop = document.getElementById("jdDrop");
-const resumeDrop = document.getElementById("resumeDrop");
+document.getElementById("jdDrop").onclick = () => jdInput.click();
+document.getElementById("resumeDrop").onclick = () => resumeInput.click();
 
-jdDrop.onclick = () => document.getElementById("jd_pdf").click();
-resumeDrop.onclick = () => document.getElementById("pdf").click();
-
-document.getElementById("jd_pdf").onchange = (e) => {
-  document.getElementById("jdFileName").innerText = e.target.files[0]?.name || "";
+jdInput.onchange = (e) => {
+    document.getElementById("jdFileName").innerText = e.target.files[0]?.name || "";
 };
 
-document.getElementById("pdf").onchange = (e) => {
-  let names = Array.from(e.target.files).map(f => f.name).join(", ");
-  document.getElementById("resumeFileNames").innerText = names;
+resumeInput.onchange = (e) => {
+    const names = Array.from(e.target.files).map(f => f.name).join(", ");
+    document.getElementById("resumeFileNames").innerText = names;
 };
 
-// ---------- ANALYZE ----------
+// ---------- CORE LOGIC ----------
 async function analyze() {
-  const loader = document.getElementById("loader");
-  if(loader) loader.style.display = "block";
+    const jdText = document.getElementById("jd").value;
+    const jdFile = jdInput.files[0];
+    const resumes = resumeInput.files;
 
-  const jdText = document.getElementById("jd").value;
-  const jdFile = document.getElementById("jd_pdf").files[0];
-  const files = document.getElementById("pdf").files;
+    if (resumes.length === 0) return alert("Please upload at least one resume!");
+    
+    document.getElementById("loader").style.display = "block";
 
-  if (files.length === 0) {
-    alert("Please upload at least one resume ❗");
-    if(loader) loader.style.display = "none";
-    return;
-  }
+    const formData = new FormData();
+    if (jdFile) formData.append("jd_pdf", jdFile);
+    else formData.append("jd_text", jdText);
 
-  const formData = new FormData();
-  if (jdFile) formData.append("jd_pdf", jdFile);
-  else formData.append("jd_text", jdText);
-
-  for (let i = 0; i < files.length; i++) {
-    formData.append("resume_pdfs", files[i]);
-  }
-
-  try {
-    const response = await fetch(`${BASE_URL}/predict`, { method: "POST", body: formData });
-    if (response.ok) {
-        await loadCandidates();
-        alert("Analysis Complete! ✅");
+    for (let file of resumes) {
+        formData.append("resume_pdfs", file);
     }
-  } catch (err) {
-    alert("Error reaching the backend ❌");
-  } finally {
-    if(loader) loader.style.display = "none";
-  }
+
+    try {
+        const response = await fetch(`${BASE_URL}/predict`, { method: "POST", body: formData });
+        if (response.ok) {
+            await loadCandidates();
+            alert("Analysis successful! ✅");
+        }
+    } catch (err) {
+        alert("Error connecting to backend ❌");
+    } finally {
+        document.getElementById("loader").style.display = "none";
+    }
 }
 
 async function loadCandidates() {
-  const res = await fetch(`${BASE_URL}/candidates`);
-  candidateData = await res.json();
-  renderDashboard();
-  updateChart();
+    const res = await fetch(`${BASE_URL}/candidates`);
+    candidateData = await res.json();
+    renderDashboard();
+    updateChart();
 }
 
 function renderDashboard() {
-  const tableBody = document.getElementById("resultTable");
-  if (candidateData.length === 0) return;
+    const tableBody = document.getElementById("resultTable");
+    if (candidateData.length === 0) return;
 
-  let total = candidateData.length;
-  let avg = Math.round(candidateData.reduce((a, b) => a + b.score, 0) / total);
-  let best = candidateData.reduce((a, b) => a.score > b.score ? a : b);
-  let worst = candidateData.reduce((a, b) => a.score < b.score ? a : b);
+    const total = candidateData.length;
+    const avg = Math.round(candidateData.reduce((s, c) => s + c.score, 0) / total);
+    const best = candidateData.reduce((p, c) => (p.score > c.score) ? p : c);
+    const worst = candidateData.reduce((p, c) => (p.score < c.score) ? p : c);
 
-  document.getElementById("totalCount").innerText = total;
-  document.getElementById("avgScore").innerText = avg + "%";
-  document.getElementById("bestCandidate").innerText = best.name;
-  document.getElementById("worstCandidate").innerText = worst.name;
+    document.getElementById("totalCount").innerText = total;
+    document.getElementById("avgScore").innerText = `${avg}%`;
+    document.getElementById("bestCandidate").innerText = best.name;
+    document.getElementById("worstCandidate").innerText = worst.name;
 
-  tableBody.innerHTML = candidateData.map(c => `
-    <tr>
-      <td>${c.name}</td>
-      <td>
-        <div class="progress-bar">
-          <div class="progress-fill ${c.score > 80 ? 'score-high' : c.score >= 50 ? 'score-mid' : 'score-low'}" style="width:${c.score}%">
-            ${c.score}%
-          </div>
-        </div>
-      </td>
-      <td>${formatSkills(c.matched, true)}</td>
-      <td>${formatSkills(c.missing, false)}</td>
-      <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
-    </tr>`).join("");
+    tableBody.innerHTML = candidateData.map(c => `
+        <tr>
+            <td>${c.name}</td>
+            <td>
+                <div class="progress-bar">
+                    <div class="progress-fill ${getScoreClass(c.score)}" style="width:${c.score}%"></div>
+                </div>
+                <small>${c.score}%</small>
+            </td>
+            <td>${formatSkills(c.matched, true)}</td>
+            <td>${formatSkills(c.missing, false)}</td>
+            <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
+        </tr>
+    `).join("");
 }
 
-function formatSkills(skills, matched) {
-  if (!skills) return "";
-  return skills.split(",").map(s => `<span class="${matched ? 'skill-match' : 'skill-miss'}">${s.trim()}</span>`).join(" ");
+// ---------- EXPORT & HELPERS ----------
+function downloadReport() {
+    if (candidateData.length === 0) return alert("No data to download!");
+    const headers = ["Name", "Score", "Matched Skills", "Missing Skills"];
+    const rows = candidateData.map(c => [`"${c.name}"`, `"${c.score}%"`, `"${c.matched}"`, `"${c.missing}"`]);
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "ATS_Candidate_Report.csv";
+    link.click();
 }
+
+function formatSkills(skills, isMatch) {
+    if (!skills) return "";
+    return skills.split(",").map(s => `<span class="${isMatch ? 'skill-match' : 'skill-miss'}">${s.trim()}</span>`).join(" ");
+}
+
+function getScoreClass(s) { return s > 80 ? "score-high" : s >= 50 ? "score-mid" : "score-low"; }
 
 function openModal(c) {
-  const modal = document.getElementById("modal");
-  document.getElementById("modalBody").innerHTML = `<h2>${c.name}</h2><h3>Score: ${c.score}%</h3><p>${c.explanation}</p>`;
-  modal.style.display = "block";
+    document.getElementById("modalBody").innerHTML = `<h2>${c.name}</h2><p>${c.explanation}</p>`;
+    document.getElementById("modal").style.display = "block";
 }
 
 function closeModal() { document.getElementById("modal").style.display = "none"; }
@@ -120,7 +121,7 @@ function updateChart() {
         type: 'bar',
         data: {
             labels: candidateData.map(c => c.name),
-            datasets: [{ label: 'ATS Score', data: candidateData.map(c => c.score), backgroundColor: '#0a66c2' }]
+            datasets: [{ label: 'Score', data: candidateData.map(c => c.score), backgroundColor: '#0a66c2' }]
         }
     });
 }

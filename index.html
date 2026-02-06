@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Resume ATS Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,7 +12,7 @@
 
 <div class="card">
   <h3>Job Description</h3>
-  <textarea id="jd" placeholder="Paste Job Description..."></textarea>
+  <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
 
   <div id="jdDrop" class="drop-zone">
     📄 Upload JD PDF (optional)
@@ -26,15 +27,22 @@
   <div id="resumeFileNames" class="file-name"></div>
 
   <div class="buttons">
-    <button onclick="analyze()">Analyze Resume</button>
-    <button class="clear-btn" onclick="clearAll()">Clear</button>
+    <button onclick="analyze()">Analyze Resumes</button>
+    <button class="clear-btn" onclick="clearAll()">Clear All</button>
   </div>
 </div>
 
-<div id="loader" class="loader" style="display:none;">Processing resumes...</div>
+<div id="loader" class="loader" style="display:none;">Analyzing resumes, please wait...</div>
 
 <div class="dashboard">
   <div class="table-area">
+    <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="margin: 0;">Analysis Results</h3>
+      <button onclick="downloadReport()" class="download-btn">
+        📥 Download CSV Report
+      </button>
+    </div>
+
     <div class="summary">
       <div class="card-box">Total Resumes<br><span id="totalCount">0</span></div>
       <div class="card-box">Average Score<br><span id="avgScore">0%</span></div>
@@ -49,13 +57,13 @@
           <th>Score</th>
           <th>Matched Skills</th>
           <th>Missing Skills</th>
-          <th>Details</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="resultTable"></tbody>
     </table>
   </div>
-  
+
   <div class="chart-area">
     <canvas id="scoreChart"></canvas>
   </div>
