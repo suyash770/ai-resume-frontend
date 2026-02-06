@@ -8,65 +8,68 @@
 </head>
 <body>
 
-<div class="header">AI Resume ATS Dashboard</div>
-
-<div class="card">
-  <h3>Job Description</h3>
-  <textarea id="jd" placeholder="Paste Job Description here..."></textarea>
-
-  <div id="jdDrop" class="drop-zone">
-    📄 Upload JD PDF (optional)
-    <input type="file" id="jd_pdf" accept=".pdf" hidden>
-  </div>
-  <div id="jdFileName" class="file-name"></div>
-
-  <div id="resumeDrop" class="drop-zone">
-    📑 Upload Resume PDFs (multiple allowed)
-    <input type="file" id="pdf" accept=".pdf" multiple hidden>
-  </div>
-  <div id="resumeFileNames" class="file-name"></div>
-
-  <div class="buttons">
-    <button onclick="analyze()">Analyze Resumes</button>
-    <button class="clear-btn" onclick="clearAll()">Clear All</button>
-  </div>
-</div>
-
-<div id="loader" class="loader" style="display:none;">Analyzing resumes, please wait...</div>
-
-<div class="dashboard">
-  <div class="table-area">
-    <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <h3 style="margin: 0;">Analysis Results</h3>
-      <button onclick="downloadReport()" class="download-btn">
-        📥 Download CSV Report
-      </button>
+<div class="app-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">ATS Control Panel</div>
+    
+    <div class="input-group">
+      <h3>Job Description</h3>
+      <textarea id="jd" placeholder="Paste JD here..."></textarea>
     </div>
 
-    <div class="summary">
-      <div class="card-box">Total Resumes<br><span id="totalCount">0</span></div>
-      <div class="card-box">Average Score<br><span id="avgScore">0%</span></div>
-      <div class="card-box">Best Candidate<br><span id="bestCandidate">-</span></div>
-      <div class="card-box">Worst Candidate<br><span id="worstCandidate">-</span></div>
+    <div id="jdDrop" class="drop-zone-mini">
+      📄 JD PDF (Optional)
+      <input type="file" id="jd_pdf" accept=".pdf" hidden>
+    </div>
+    <div id="jdFileName" class="file-name"></div>
+
+    <div id="resumeDrop" class="drop-zone-mini">
+      📑 Upload Resumes
+      <input type="file" id="pdf" accept=".pdf" multiple hidden>
+    </div>
+    <div id="resumeFileNames" class="file-name"></div>
+
+    <div class="sidebar-buttons">
+      <button onclick="analyze()" class="btn-primary">Analyze Resumes</button>
+      <button onclick="clearAll()" class="btn-outline">Clear All</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="top-nav">
+      <h2>Recruitment Insights Dashboard</h2>
+      <button onclick="downloadReport()" class="download-btn">📥 Export CSV</button>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Score</th>
-          <th>Matched Skills</th>
-          <th>Missing Skills</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="resultTable"></tbody>
-    </table>
-  </div>
+    <div id="loader" class="loader" style="display:none;">Analyzing...</div>
 
-  <div class="chart-area">
-    <canvas id="scoreChart"></canvas>
-  </div>
+    <div class="summary-grid">
+      <div class="stat-card">Total Resumes<span id="totalCount">0</span></div>
+      <div class="stat-card">Average Score<span id="avgScore">0%</span></div>
+      <div class="stat-card">Top Candidate<span id="bestCandidate">-</span></div>
+      <div class="stat-card">Lowest Match<span id="worstCandidate">-</span></div>
+    </div>
+
+    <div class="visual-row">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Score</th>
+              <th>Skills Match</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="resultTable"></tbody>
+        </table>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="scoreChart"></canvas>
+      </div>
+    </div>
+  </main>
 </div>
 
 <div id="modal" class="modal">
