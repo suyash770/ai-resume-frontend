@@ -2,69 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Resume ATS Dashboard</title>
+  <title>Professional AI Resume ATS</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body onload="checkLogin()">
 
-<div class="app-container">
-  <aside class="sidebar">
-    <div class="sidebar-header">ATS Control Panel</div>
+<div class="app-layout">
+  <nav class="side-nav">
+    <div class="logo">ATS Pro</div>
+    <ul>
+      <li class="active">📊 Dashboard</li>
+      <li>📂 Candidates</li>
+      <li>💼 Jobs</li>
+      <li>⚙️ Settings</li>
+    </ul>
     
-    <div class="input-group">
-      <h3>Job Description</h3>
-      <textarea id="jd" placeholder="Paste JD here..."></textarea>
+    <div class="sidebar-inputs">
+       <textarea id="jd" placeholder="Paste Job Description..."></textarea>
+       <div id="jdDrop" class="upload-box">JD PDF</div>
+       <input type="file" id="jd_pdf" hidden>
+       <div id="resumeDrop" class="upload-box">Resumes</div>
+       <input type="file" id="pdf" multiple hidden>
+       <button onclick="analyze()" class="btn-glow">Run Analysis</button>
+    </div>
+  </nav>
+
+  <main class="main-body">
+    <header class="top-bar">
+      <h2>Recruitment Overview</h2>
+      <div class="user-profile">
+        <span id="userNameDisplay">HR Manager</span>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <div class="metrics-row">
+      <div class="m-card">Total<br><span id="totalCount">0</span></div>
+      <div class="m-card">Avg. Score<br><span id="avgScore">0%</span></div>
+      <div class="m-card">Best Match<br><span id="bestCandidate">-</span></div>
+      <div class="m-card">Export<br><button onclick="downloadReport()">CSV</button></div>
     </div>
 
-    <div id="jdDrop" class="drop-zone-mini">
-      📄 JD PDF (Optional)
-      <input type="file" id="jd_pdf" accept=".pdf" hidden>
-    </div>
-    <div id="jdFileName" class="file-name"></div>
-
-    <div id="resumeDrop" class="drop-zone-mini">
-      📑 Upload Resumes
-      <input type="file" id="pdf" accept=".pdf" multiple hidden>
-    </div>
-    <div id="resumeFileNames" class="file-name"></div>
-
-    <div class="sidebar-buttons">
-      <button onclick="analyze()" class="btn-primary">Analyze Resumes</button>
-      <button onclick="clearAll()" class="btn-outline">Clear All</button>
-    </div>
-  </aside>
-
-  <main class="content">
-    <div class="top-nav">
-      <h2>Recruitment Insights Dashboard</h2>
-      <button onclick="downloadReport()" class="download-btn">📥 Export CSV</button>
-    </div>
-
-    <div id="loader" class="loader" style="display:none;">Analyzing...</div>
-
-    <div class="summary-grid">
-      <div class="stat-card">Total Resumes<span id="totalCount">0</span></div>
-      <div class="stat-card">Average Score<span id="avgScore">0%</span></div>
-      <div class="stat-card">Top Candidate<span id="bestCandidate">-</span></div>
-      <div class="stat-card">Lowest Match<span id="worstCandidate">-</span></div>
-    </div>
-
-    <div class="visual-row">
+    <div class="data-grid">
       <div class="table-container">
         <table>
           <thead>
-            <tr>
-              <th>Name</th>
-              <th>Score</th>
-              <th>Skills Match</th>
-              <th>Details</th>
-            </tr>
+            <tr><th>Name</th><th>Score</th><th>Matched Skills</th></tr>
           </thead>
           <tbody id="resultTable"></tbody>
         </table>
       </div>
-
       <div class="chart-container">
         <canvas id="scoreChart"></canvas>
       </div>
@@ -72,10 +60,11 @@
   </main>
 </div>
 
-<div id="modal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <div id="modalBody"></div>
+<div id="welcomePopup" class="welcome-modal">
+  <div class="welcome-content">
+    <h2>👋 Welcome, <span id="welcomeName">User</span>!</h2>
+    <p>Ready to find your next star candidate?</p>
+    <button onclick="closeWelcome()">Let's Go</button>
   </div>
 </div>
 
