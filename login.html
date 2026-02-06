@@ -7,103 +7,24 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background: #f8fafc; 
-            font-family: 'Inter', sans-serif; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-        }
-        .auth-card { 
-            background: white; 
-            padding: 2.5rem; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-            width: 100%; 
-            max-width: 400px; 
-            transition: all 0.3s ease;
-        }
-        .auth-card h1 { 
-            color: #7c3aed; 
-            text-align: center; 
-            margin-bottom: 1.5rem; 
-            font-size: 1.8rem; 
-        }
+        body { background: #f8fafc; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .auth-card { background: white; padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        .auth-card h1 { color: #7c3aed; text-align: center; margin-bottom: 1.5rem; font-size: 1.8rem; }
         .form-group { margin-bottom: 1.2rem; }
-        .form-group label { 
-            display: block; 
-            font-size: 0.85rem; 
-            font-weight: 600; 
-            color: #64748b; 
-            margin-bottom: 6px; 
-        }
-        .form-group input, .form-group select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            font-size: 1rem; 
-            outline: none;
-        }
-        .form-group input:focus { border-color: #7c3aed; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 6px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         
-        /* Validation Error Styling */
-        .error-msg { 
-            color: #ef4444; 
-            font-size: 0.75rem; 
-            margin-top: 4px; 
-            display: none; 
-        }
-
-        /* Loading Spinner & Animations */
-        .auth-btn { 
-            width: 100%; 
-            background: #7c3aed; 
-            color: white; 
-            border: none; 
-            padding: 14px; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background 0.3s; 
-        }
+        .auth-btn { width: 100%; background: #7c3aed; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .auth-btn:hover { background: #6d28d9; }
-        .spinner {
-            display: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-        }
+        
+        /* Spinner & Success UI */
+        .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading .spinner { display: inline-block; }
         .loading .btn-text { display: none; }
-
-        .success-icon {
-            display: none;
-            color: #22c55e;
-            font-size: 1.2rem;
-            text-align: center;
-            margin-bottom: 1rem;
-            font-weight: 700;
-        }
-
-        .toggle-link { 
-            text-align: center; 
-            margin-top: 1rem; 
-            font-size: 0.85rem; 
-            color: #7c3aed; 
-            cursor: pointer; 
-        }
+        .success-icon { display: none; color: #22c55e; font-weight: bold; text-align: center; margin-bottom: 1rem; }
+        
+        .toggle-link { text-align: center; margin-top: 1rem; font-size: 0.85rem; color: #7c3aed; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -128,21 +49,18 @@
             </div>
             <div class="form-group">
                 <label>Mobile Number</label>
-                <input type="tel" id="regMobile" placeholder="10-digit Mobile" maxlength="10">
-                <div id="mobileError" class="error-msg">Enter a valid 10-digit number.</div>
+                <input type="tel" id="regMobile" placeholder="10-digit Mobile">
             </div>
         </div>
 
         <div class="form-group">
             <label>Email ID</label>
-            <input type="email" id="userEmail" placeholder="name@gmail.com" required>
-            <div id="emailError" class="error-msg">Enter a valid email address.</div>
+            <input type="email" id="userEmail" placeholder="name@gmail.com">
         </div>
         
         <div class="form-group">
             <label>Password</label>
-            <input type="password" id="userPass" placeholder="Min 6 characters" required>
-            <div id="passError" class="error-msg">Password must be at least 6 characters.</div>
+            <input type="password" id="userPass" placeholder="••••••••">
         </div>
 
         <button id="authBtn" onclick="handleAuth()" class="auth-btn">
@@ -151,43 +69,35 @@
         </button>
 
         <div class="toggle-link" onclick="toggleAuthMode()" id="toggleText">Don't have an account? Sign Up</div>
-        <div class="toggle-link" onclick="handlePasswordReset()" style="margin-top: 0.5rem; font-size: 0.75rem;">Forgot Password? Reset Here</div>
     </div>
 
     <script src="script.js"></script>
     <script>
         let isLoginMode = true;
 
-        /** * Switches between Login and Registration views
-         */
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
             document.getElementById("formTitle").innerText = isLoginMode ? "ATS Login" : "Create Account";
             document.getElementById("btnText").innerText = isLoginMode ? "Login" : "Register";
             document.getElementById("signupFields").style.display = isLoginMode ? "none" : "block";
             document.getElementById("toggleText").innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
-            
-            // Clear errors when switching
-            document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
         }
 
-        /** * Handles the authentication trigger with UI feedback
-         */
         async function handleAuth() {
             const role = document.getElementById("userRole").value;
             const email = document.getElementById("userEmail").value;
             const pass = document.getElementById("userPass").value;
 
             if (isLoginMode) {
-                // Calls verified login User function in script.js
+                // Calls loginUser in script.js
                 await loginUser(email, pass, role);
             } else {
                 const name = document.getElementById("regName").value;
                 const mobile = document.getElementById("regMobile").value;
-                // Calls verified registration function in script.js
+                // Calls registerUser in script.js
                 const success = await registerUser(name, email, mobile, pass, role);
                 if (success) {
-                    setTimeout(() => { toggleAuthMode(); }, 1500);
+                    setTimeout(() => { toggleAuthMode(); }, 2000);
                 }
             }
         }
