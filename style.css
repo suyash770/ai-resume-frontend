@@ -418,3 +418,67 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color
   padding-left: 5px;
   word-break: break-all;
 }
+/* Sidebar Fix: Make it scrollable */
+.side-nav {
+  width: 260px;
+  background: var(--side);
+  border-right: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Fixed height */
+  overflow-y: auto; /* Enable scrolling if content is long */
+  position: sticky;
+  top: 0;
+  scrollbar-width: thin; /* Clean scrollbar for Firefox */
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Custom Scrollbar for Chrome/Edge */
+.side-nav::-webkit-scrollbar {
+  width: 6px;
+}
+.side-nav::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Stylish User Profile Area */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  padding: 8px 16px;
+  border-radius: 50px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+#userNameDisplay {
+  font-weight: 700;
+  color: #7c3aed; /* Purple theme */
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+/* Navigation Hover Effects */
+.side-nav li {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.side-nav li:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.side-nav li.active {
+  background: #f5f3ff;
+  color: #7c3aed;
+}

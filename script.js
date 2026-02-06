@@ -2,15 +2,23 @@ const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
 let scoreChart;
 
-// 1. SESSION & LOGIN PROTECTION
+// 1. SESSION PROTECTION & REDIRECT
+// Ensures users cannot bypass the login page
 if (!localStorage.getItem("loggedInUser") && !window.location.href.includes("login.html")) {
     window.location.href = "login.html";
 }
 
+/**
+ * INITIALIZATION & STYLISH GREETING
+ */
 function checkLogin() {
-    let user = localStorage.getItem("loggedInUser") || "Guest";
-    document.getElementById("welcomeName").innerText = user;
-    document.getElementById("userNameDisplay").innerText = user;
+    let user = localStorage.getItem("loggedInUser") || "User";
+    
+    // Formatting the name to be more stylish (Capitalized)
+    const formattedName = user.charAt(0).toUpperCase() + user.slice(1);
+    
+    document.getElementById("welcomeName").innerText = formattedName;
+    document.getElementById("userNameDisplay").innerText = formattedName;
     
     const popup = document.getElementById("welcomePopup");
     if (popup) popup.style.display = "block";
@@ -20,15 +28,35 @@ function closeWelcome() {
     document.getElementById("welcomePopup").style.display = "none";
 }
 
-function logout() {
-    localStorage.removeItem("loggedInUser");
-    window.location.href = "login.html";
-}
+/**
+ * NAVIGATION & SIDEBAR INTERACTIVITY
+ */
+// Making "Candidates" and "Settings" buttons interactive
+document.querySelectorAll('.side-nav li').forEach(item => {
+    item.addEventListener('click', function() {
+        document.querySelectorAll('.side-nav li').forEach(li => li.classList.remove('active'));
+        this.classList.add('active');
+        
+        const page = this.innerText.toLowerCase();
+        
+        if (page.includes("candidates")) {
+            alert("Switching to Candidates Management View...");
+        } else if (page.includes("settings")) {
+            alert("Opening System Settings...");
+        } else if (page.includes("dashboard")) {
+            // Reload to main dashboard view
+            window.location.href = "index.html"; 
+        }
+    });
+});
 
-// 2. FILE HANDLING
+/**
+ * FILE INPUT HANDLING
+ */
 const jdInput = document.getElementById("jd_pdf");
 const resumeInput = document.getElementById("pdf");
 
+// Linking custom sidebar boxes to hidden file inputs
 document.getElementById("jdDrop").onclick = () => jdInput.click();
 document.getElementById("resumeDrop").onclick = () => resumeInput.click();
 
@@ -41,17 +69,20 @@ resumeInput.onchange = (e) => {
     document.getElementById("resumeFileNames").innerText = names;
 };
 
-// 3. CORE ANALYSIS
+/**
+ * CORE ANALYSIS LOGIC
+ */
 async function analyze() {
     const jdText = document.getElementById("jd").value;
     const jdFile = jdInput.files[0];
     const resumes = resumeInput.files;
 
-    if (resumes.length === 0) return alert("Please upload at least one resume!");
+    if (resumes.length === 0) return alert("Please upload at least one resume! ❗");
     
     document.getElementById("loader").style.display = "flex";
 
     const formData = new FormData();
+    // Synchronizing keys with the backend
     if (jdFile) formData.append("jd_pdf", jdFile);
     else formData.append("jd_text", jdText);
 
@@ -70,7 +101,8 @@ async function analyze() {
             alert("Analysis successful! ✅");
         }
     } catch (err) {
-        alert("Error connecting to backend ❌");
+        console.error("Fetch error:", err);
+        alert("Server error. Check if your backend is running.");
     } finally {
         document.getElementById("loader").style.display = "none";
     }
@@ -87,7 +119,9 @@ async function loadCandidates() {
     }
 }
 
-// 4. UI RENDERING
+/**
+ * UI RENDERING & DASHBOARD DATA
+ */
 function renderDashboard() {
     const tableBody = document.getElementById("resultTable");
     if (!candidateData || candidateData.length === 0) return;
@@ -110,25 +144,27 @@ function renderDashboard() {
                 <small>${c.score}% Match</small>
             </td>
             <td>${formatSkills(c.matched)}</td>
-            <td><button class="btn-view">View Profile</button></td>
+            <td><button class="btn-view" onclick='viewDetails(${JSON.stringify(c)})'>View</button></td>
         </tr>
     `).join("");
 }
 
 function getScoreColor(score) {
-    if (score > 80) return "#22c55e"; 
-    if (score >= 50) return "#f59e0b"; 
-    return "#ef4444"; 
+    if (score > 80) return "#22c55e"; // Green
+    if (score >= 50) return "#f59e0b"; // Amber
+    return "#ef4444"; // Red
 }
 
 function formatSkills(skills) {
     if (!skills) return "No matches";
     return skills.split(",").map(s => 
-        `<span class="skill-tag">${s.trim()}</span>`
+        `<span class="skill-tag" style="background:#f5f3ff; color:#7c3aed; padding:2px 8px; border-radius:12px; font-size:11px; margin:2px; display:inline-block;">${s.trim()}</span>`
     ).join("");
 }
 
-// 5. EXPORT & CHART
+/**
+ * DATA EXPORT & VISUALS
+ */
 function downloadReport() {
     if (candidateData.length === 0) return alert("No data to export!");
     const headers = ["Name", "Score", "Matched Skills", "Missing Skills"];
@@ -137,28 +173,47 @@ function downloadReport() {
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "ATS_Candidate_Report.csv";
+    link.download = `ATS_Report_${new Date().toLocaleDateString()}.csv`;
     link.click();
 }
 
 function updateChart() {
     const ctx = document.getElementById('scoreChart').getContext('2d');
     if (scoreChart) scoreChart.destroy();
+    
     scoreChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: candidateData.map(c => c.name),
             datasets: [{
-                label: 'ATS Match Score',
+                label: 'ATS Match Score (%)',
                 data: candidateData.map(c => c.score),
                 backgroundColor: '#7c3aed',
-                borderRadius: 5
+                borderRadius: 6
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, max: 100 } }
+        }
     });
 }
 
+/**
+ * AUTHENTICATION & UTILITIES
+ */
+function logout() {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
+}
+
 function clearAll() {
-    if(confirm("Confirm reset?")) location.reload();
+    if(confirm("Confirm reset? This will clear the current analysis.")) {
+        location.reload();
+    }
+}
+
+function viewDetails(c) {
+    alert(`Candidate: ${c.name}\nScore: ${c.score}%\n\nExplanation: ${c.explanation}`);
 }
