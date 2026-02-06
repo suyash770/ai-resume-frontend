@@ -31,8 +31,10 @@
        <input type="file" id="pdf" multiple hidden>
        <div id="resumeFileNames" class="file-name"></div>
        
-       <button onclick="analyze()" class="btn-glow">Run Analysis</button>
-       <button onclick="clearAll()" class="btn-clear-side">Clear All</button>
+       <div class="side-actions">
+         <button onclick="analyze()" class="btn-glow">Run Analysis</button>
+         <button onclick="clearAll()" class="btn-clear-side">Clear All</button>
+       </div>
     </div>
   </aside>
 
@@ -40,7 +42,7 @@
     <header class="top-bar">
       <h2>Recruitment Overview</h2>
       <div class="user-profile">
-        <span id="userNameDisplay">HR Manager</span>
+        <span id="userNameDisplay">User</span>
         <button onclick="logout()" class="btn-logout">Logout</button>
       </div>
     </header>
@@ -82,7 +84,7 @@
 <div id="welcomePopup" class="welcome-modal">
   <div class="welcome-content">
     <h2>👋 Welcome, <span id="welcomeName">User</span>!</h2>
-    <p>Your AI Resume Screening dashboard is ready.</p>
+    <p>Your AI Resume Screening dashboard is ready. Let's find the best talent.</p>
     <button onclick="closeWelcome()" class="btn-glow">Start Screening</button>
   </div>
 </div>
