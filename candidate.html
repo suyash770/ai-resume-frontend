@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candidate Portal | ATS Pro</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body onload="checkCandidateSession()">
+
+<div class="app-layout">
+  <aside class="side-nav">
+    <div class="logo">ATS Pro</div>
+    <ul>
+      <li class="active">🏠 My Applications</li>
+      <li>💼 Available Jobs</li>
+      <li onclick="logout()">🚪 Logout</li>
+    </ul>
+  </aside>
+
+  <main class="main-body">
+    <header class="top-bar">
+      <h2>Welcome back, <span id="candName">Applicant</span></h2>
+      <div class="user-profile-trigger">
+        <div class="user-info-text">
+          <span id="userNameDisplay" class="user-name">Candidate</span>
+          <span class="user-role">Applicant</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="metrics-row">
+      <div class="m-card">Applied Jobs<span id="appliedCount">0</span></div>
+      <div class="m-card">Profile Strength<span id="profileStrength">0%</span></div>
+    </div>
+
+    <div class="card" style="background:white; padding:2rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+        <h3>Apply for a New Role</h3>
+        <p style="color:#64748b; font-size:0.9rem; margin-bottom:1.5rem;">Upload your latest resume to see how well you match our requirements.</p>
+        
+        <div class="form-group" style="margin-bottom:1rem;">
+            <label>Select Target Role</label>
+            <select id="targetJob" style="width:100%; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+                <option value="software_engineer">Software Engineer</option>
+                <option value="data_analyst">Data Analyst</option>
+                <option value="hr_manager">HR Manager</option>
+            </select>
+        </div>
+
+        <div id="resumeDrop" class="upload-box" style="border: 2px dashed #7c3aed; background:#f5f3ff;">
+            📑 Click to Upload Your Resume (PDF)
+            <input type="file" id="pdf" accept=".pdf" hidden>
+        </div>
+        <div id="resumeFileNames" class="file-name"></div>
+
+        <button onclick="submitApplication()" class="btn-glow" style="width:100%; margin-top:1rem;">Check Match & Apply</button>
+    </div>
+
+    <div id="candidateResult" style="display:none; margin-top:2rem;">
+        <div class="m-card" style="border-left:5px solid #7c3aed;">
+            <h3>Your Match Score</h3>
+            <span id="matchScoreDisplay" style="font-size:3rem; color:#7c3aed;">0%</span>
+            <p id="matchFeedback" style="color:#64748b; margin-top:1rem;"></p>
+        </div>
+    </div>
+  </main>
+</div>
+
+<div id="loader" class="loader-overlay" style="display:none;">
+    <div class="loader-spinner"></div>
+    <p>Analyzing your profile...</p>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
