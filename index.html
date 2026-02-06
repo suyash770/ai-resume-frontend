@@ -10,39 +10,30 @@
 <div class="header">AI Resume ATS Dashboard</div>
 
 <div class="card">
-
-  <!-- Job Description -->
   <h3>Job Description</h3>
-  <textarea id="jdText" placeholder="Paste Job Description..."></textarea>
+  <textarea id="jd" placeholder="Paste Job Description..."></textarea>
 
-  <!-- JD PDF Upload -->
-  <div class="drop-zone" onclick="document.getElementById('jdPdf').click()">
+  <div id="jdDrop" class="drop-zone">
     📄 Upload JD PDF (optional)
-    <input type="file" id="jdPdf" accept=".pdf" hidden>
+    <input type="file" id="jd_pdf" accept=".pdf" hidden>
   </div>
   <div id="jdFileName" class="file-name"></div>
 
-  <!-- Resume Upload -->
-  <div class="drop-zone" onclick="document.getElementById('resumePdfs').click()">
+  <div id="resumeDrop" class="drop-zone">
     📑 Upload Resume PDFs (multiple allowed)
-    <input type="file" id="resumePdfs" accept=".pdf" multiple hidden>
+    <input type="file" id="pdf" accept=".pdf" multiple hidden>
   </div>
   <div id="resumeFileNames" class="file-name"></div>
 
-  <!-- Buttons -->
   <div class="buttons">
-    <button onclick="analyzeResumes()">Analyze Resume</button>
+    <button onclick="analyze()">Analyze Resume</button>
     <button class="clear-btn" onclick="clearAll()">Clear</button>
   </div>
-
 </div>
 
-<!-- Loader -->
 <div id="loader" class="loader" style="display:none;">Processing resumes...</div>
 
-<!-- Dashboard -->
 <div class="dashboard">
-
   <div class="table-area">
     <div class="summary">
       <div class="card-box">Total Resumes<br><span id="totalCount">0</span></div>
@@ -58,14 +49,26 @@
           <th>Score</th>
           <th>Matched Skills</th>
           <th>Missing Skills</th>
+          <th>Details</th>
         </tr>
       </thead>
       <tbody id="resultTable"></tbody>
     </table>
   </div>
-
+  
+  <div class="chart-area">
+    <canvas id="scoreChart"></canvas>
+  </div>
 </div>
 
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

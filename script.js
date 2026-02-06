@@ -1,6 +1,6 @@
 const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
-let chart;
+let scoreChart;
 
 // ---------- FILE HELPERS ----------
 function addFiles(input, newFiles) {
@@ -17,40 +17,31 @@ const resumeDrop = document.getElementById("resumeDrop");
 jdDrop.onclick = () => document.getElementById("jd_pdf").click();
 resumeDrop.onclick = () => document.getElementById("pdf").click();
 
-jdDrop.ondrop = (e) => {
-  e.preventDefault();
-  addFiles(document.getElementById("jd_pdf"), e.dataTransfer.files);
-  document.getElementById("jdFileName").innerText =
-    document.getElementById("jd_pdf").files[0]?.name || "";
+document.getElementById("jd_pdf").onchange = (e) => {
+  document.getElementById("jdFileName").innerText = e.target.files[0]?.name || "";
 };
 
-resumeDrop.ondrop = (e) => {
-  e.preventDefault();
-  addFiles(document.getElementById("pdf"), e.dataTransfer.files);
-
-  let names = Array.from(document.getElementById("pdf").files)
-    .map(f => f.name).join(", ");
-
-  document.getElementById("resumeFileName").innerText = names;
+document.getElementById("pdf").onchange = (e) => {
+  let names = Array.from(e.target.files).map(f => f.name).join(", ");
+  document.getElementById("resumeFileNames").innerText = names;
 };
 
-jdDrop.ondragover = resumeDrop.ondragover = (e) => e.preventDefault();
-
-// ---------- ANALYZE (FIXED) ----------
-function analyze() {
-  showLoader();
+// ---------- ANALYZE ----------
+async function analyze() {
+  const loader = document.getElementById("loader");
+  if(loader) loader.style.display = "block";
 
   const jdText = document.getElementById("jd").value;
   const jdFile = document.getElementById("jd_pdf").files[0];
   const files = document.getElementById("pdf").files;
 
   if (files.length === 0) {
-    showToast("Please upload at least one resume ❗");
+    alert("Please upload at least one resume ❗");
+    if(loader) loader.style.display = "none";
     return;
   }
 
   const formData = new FormData();
-
   if (jdFile) formData.append("jd_pdf", jdFile);
   else formData.append("jd_text", jdText);
 
@@ -58,145 +49,78 @@ function analyze() {
     formData.append("resume_pdfs", files[i]);
   }
 
-  // WAIT for backend to finish
-  fetch(`${BASE_URL}/predict`, {
-    method: "POST",
-    body: formData,
-  })
-    .then(res => res.json())
-    .then(() => loadCandidates())
-    .then(() => showToast("Resumes analyzed successfully ✅"))
-    .catch(() => showToast("Error analyzing resumes ❌"));
+  try {
+    const response = await fetch(`${BASE_URL}/predict`, { method: "POST", body: formData });
+    if (response.ok) {
+        await loadCandidates();
+        alert("Analysis Complete! ✅");
+    }
+  } catch (err) {
+    alert("Error reaching the backend ❌");
+  } finally {
+    if(loader) loader.style.display = "none";
+  }
 }
 
-// ---------- LOAD ----------
-function loadCandidates() {
-  return fetch(`${BASE_URL}/candidates`)
-    .then(res => res.json())
-    .then(data => {
-      candidateData = data;
-      renderDashboard();
-      renderChart();
-    });
+async function loadCandidates() {
+  const res = await fetch(`${BASE_URL}/candidates`);
+  candidateData = await res.json();
+  renderDashboard();
+  updateChart();
 }
 
-// ---------- DASHBOARD ----------
 function renderDashboard() {
-  const resultDiv = document.getElementById("result");
+  const tableBody = document.getElementById("resultTable");
+  if (candidateData.length === 0) return;
 
   let total = candidateData.length;
-  if (total === 0) return;
-
   let avg = Math.round(candidateData.reduce((a, b) => a + b.score, 0) / total);
   let best = candidateData.reduce((a, b) => a.score > b.score ? a : b);
   let worst = candidateData.reduce((a, b) => a.score < b.score ? a : b);
 
-  let summary = `
-    <div class="summary">
-      <div class="card-box">Total Resumes<br><b>${total}</b></div>
-      <div class="card-box">Average Score<br><b>${avg}%</b></div>
-      <div class="card-box">Best Candidate<br><b>${best.name}</b></div>
-      <div class="card-box">Worst Candidate<br><b>${worst.name}</b></div>
-    </div>
-  `;
+  document.getElementById("totalCount").innerText = total;
+  document.getElementById("avgScore").innerText = avg + "%";
+  document.getElementById("bestCandidate").innerText = best.name;
+  document.getElementById("worstCandidate").innerText = worst.name;
 
-  let table = `
-    <table>
-      <tr>
-        <th>Name</th>
-        <th>Score</th>
-        <th>Matched Skills</th>
-        <th>Missing Skills</th>
-        <th>Details</th>
-      </tr>
-  `;
-
-  candidateData.forEach(c => {
-    let scoreClass =
-      c.score > 80 ? "score-high" :
-      c.score >= 50 ? "score-mid" : "score-low";
-
-    table += `
-      <tr>
-        <td>${c.name}</td>
-        <td>
-          <div class="progress-bar">
-            <div class="progress-fill ${scoreClass}" style="width:${c.score}%">
-              ${c.score}%
-            </div>
+  tableBody.innerHTML = candidateData.map(c => `
+    <tr>
+      <td>${c.name}</td>
+      <td>
+        <div class="progress-bar">
+          <div class="progress-fill ${c.score > 80 ? 'score-high' : c.score >= 50 ? 'score-mid' : 'score-low'}" style="width:${c.score}%">
+            ${c.score}%
           </div>
-        </td>
-        <td>${formatSkills(c.matched, true)}</td>
-        <td>${formatSkills(c.missing, false)}</td>
-        <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
-      </tr>
-    `;
-  });
-
-  table += "</table>";
-  resultDiv.innerHTML = summary + table;
+        </div>
+      </td>
+      <td>${formatSkills(c.matched, true)}</td>
+      <td>${formatSkills(c.missing, false)}</td>
+      <td><button onclick='openModal(${JSON.stringify(c)})'>View</button></td>
+    </tr>`).join("");
 }
 
-// ---------- SKILL BADGES ----------
 function formatSkills(skills, matched) {
   if (!skills) return "";
-  let color = matched ? "skill-match" : "skill-miss";
-  return skills.split(",").map(s =>
-    `<span class="${color}">${s.trim()}</span>`
-  ).join(" ");
+  return skills.split(",").map(s => `<span class="${matched ? 'skill-match' : 'skill-miss'}">${s.trim()}</span>`).join(" ");
 }
 
-// ---------- CHART ----------
-function renderChart() {
-  const ctx = document.getElementById("scoreChart");
-  if (!ctx) return;
-
-  if (chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: candidateData.map(c => c.name),
-      datasets: [{
-        label: 'ATS Score',
-        data: candidateData.map(c => c.score),
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-// ---------- MODAL ----------
 function openModal(c) {
   const modal = document.getElementById("modal");
-  const body = document.getElementById("modalBody");
-
-  body.innerHTML = `
-    <h2>${c.name}</h2>
-    <h3>Score: ${c.score}%</h3>
-    <h4>Matched Skills</h4>
-    ${formatSkills(c.matched, true)}
-    <h4>Missing Skills</h4>
-    ${formatSkills(c.missing, false)}
-  `;
-
+  document.getElementById("modalBody").innerHTML = `<h2>${c.name}</h2><h3>Score: ${c.score}%</h3><p>${c.explanation}</p>`;
   modal.style.display = "block";
 }
 
-function closeModal() {
-  document.getElementById("modal").style.display = "none";
-}
+function closeModal() { document.getElementById("modal").style.display = "none"; }
+function clearAll() { location.reload(); }
 
-// ---------- UI HELPERS ----------
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
-  toast.innerText = message;
-  toast.style.display = "block";
-  setTimeout(() => toast.style.display = "none", 3000);
-}
-
-function showLoader() {
-  document.getElementById("result").innerHTML =
-    '<div class="loader">Analyzing resumes, please wait...</div>';
+function updateChart() {
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    if (scoreChart) scoreChart.destroy();
+    scoreChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: candidateData.map(c => c.name),
+            datasets: [{ label: 'ATS Score', data: candidateData.map(c => c.score), backgroundColor: '#0a66c2' }]
+        }
+    });
 }
