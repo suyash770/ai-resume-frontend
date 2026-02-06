@@ -7,13 +7,13 @@ let scoreChart;
     emailjs.init("YOUR_PUBLIC_KEY"); 
 })();
 
-// 1. SESSION PROTECTION
+// SESSION PROTECTION
 if (!localStorage.getItem("loggedInUser") && !window.location.href.includes("login.html")) {
     window.location.href = "login.html";
 }
 
 /**
- * INITIALIZATION
+ * DASHBOARD & PROFILE INITIALIZATION
  */
 function checkLogin() {
     let user = localStorage.getItem("loggedInUser") || "User";
@@ -37,64 +37,39 @@ function checkLogin() {
         document.getElementById('profilePicPreview').src = savedAvatar;
         document.getElementById('navAvatar').src = savedAvatar;
     }
-
-    document.getElementById("welcomeName").innerText = document.getElementById("userNameDisplay").innerText;
-    document.getElementById("welcomePopup").style.display = "block";
 }
 
 /**
- * PROFILE & SIDEBAR LOGIC
- */
-function toggleProfileView() {
-    const profile = document.getElementById("profileSection");
-    const dashboard = document.getElementById("dashboardContent");
-    profile.style.display = (profile.style.display === "none") ? "block" : "none";
-    dashboard.style.opacity = (profile.style.display === "block") ? "0.2" : "1";
-}
-
-function previewImage(event) {
-    const reader = new FileReader();
-    reader.onload = function() {
-        document.getElementById('profilePicPreview').src = reader.result;
-        document.getElementById('navAvatar').src = reader.result;
-        localStorage.setItem("userAvatar", reader.result);
-    }
-    reader.readAsDataURL(event.target.files[0]);
-}
-
-function saveProfile() {
-    const profileData = {
-        name: document.getElementById("profileFullName").value,
-        role: document.getElementById("profileRole").value,
-        dob: document.getElementById("profileDOB").value,
-        email: document.getElementById("profileEmail").value
-    };
-    localStorage.setItem("userProfile", JSON.stringify(profileData));
-    document.getElementById("userNameDisplay").innerText = profileData.name || "User";
-    alert("Profile Updated! ✅");
-    toggleProfileView();
-}
-
-/**
- * ANALYSIS LOGIC
+ * ANALYSIS WITH LOADER POPUP
  */
 async function analyze() {
     const jdText = document.getElementById("jd").value;
+    const jdFile = document.getElementById("jd_pdf").files[0];
     const resumes = document.getElementById("pdf").files;
+
     if (resumes.length === 0) return alert("Please upload resumes!");
     
-    document.getElementById("loader").style.display = "flex";
+    // Show Analyzing Popup
+    document.getElementById("analysisLoader").style.display = "flex";
+
     const formData = new FormData();
-    if (document.getElementById("jd_pdf").files[0]) formData.append("jd_pdf", document.getElementById("jd_pdf").files[0]);
+    if (jdFile) formData.append("jd_pdf", jdFile);
     else formData.append("jd_text", jdText);
 
     for (let file of resumes) formData.append("resume_pdfs", file);
 
     try {
         const response = await fetch(`${BASE_URL}/predict`, { method: "POST", body: formData });
-        if (response.ok) { await loadCandidates(); alert("Analysis complete! ✅"); }
-    } catch (err) { alert("Backend error ❌"); }
-    finally { document.getElementById("loader").style.display = "none"; }
+        if (response.ok) {
+            await loadCandidates();
+            alert("Analysis complete! ✅");
+        }
+    } catch (err) {
+        alert("Backend error ❌");
+    } finally {
+        // Hide Analyzing Popup
+        document.getElementById("analysisLoader").style.display = "none";
+    }
 }
 
 async function loadCandidates() {
@@ -104,6 +79,9 @@ async function loadCandidates() {
     updateChart();
 }
 
+/**
+ * CLEANED ACTION BUTTONS UI
+ */
 function renderDashboard() {
     const tableBody = document.getElementById("resultTable");
     if (!candidateData.length) return;
@@ -122,20 +100,23 @@ function renderDashboard() {
                 <small>${c.score}% Match</small>
             </td>
             <td>${formatSkills(c.matched)}</td>
-            <td>
-                <button class="btn-view" onclick='viewDetails(${JSON.stringify(c)})'>View</button>
-                <button class="btn-email" onclick='openEmailModal(${JSON.stringify(c)})' style="background:#7c3aed; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Email</button>
+            <td class="action-cell">
+                <button class="btn-action btn-view" onclick='viewDetails(${JSON.stringify(c)})'>View</button>
+                <button class="btn-action btn-email" onclick='openEmailModal(${JSON.stringify(c)})'>Email</button>
             </td>
         </tr>`).join("");
 }
 
 /**
- * EMAIL AUTOMATION
+ * EMAIL LOGIC (AUTO-POPULATE & EDITABLE)
  */
 function openEmailModal(c) {
-    document.getElementById("emailTo").value = c.email || "candidate@example.com";
+    const emailField = document.getElementById("emailTo");
+    emailField.value = c.email || ""; 
+    emailField.readOnly = false; // Allowing manual edit
+    
     if (c.score > 70) {
-        document.getElementById("emailSubject").value = "Invitation for Interview - " + c.name;
+        document.getElementById("emailSubject").value = "Interview Invite - " + c.name;
         document.getElementById("emailMessage").value = `Hi ${c.name},\n\nYour profile is a strong match (${c.score}%). We'd like to interview you.\n\nBest,\n${localStorage.getItem("loggedInUser")}`;
     } else {
         document.getElementById("emailSubject").value = "Application Update - " + c.name;
@@ -162,8 +143,38 @@ function sendEmail() {
 function closeEmailModal() { document.getElementById("emailModal").style.display = "none"; }
 
 /**
- * SYSTEM UTILITIES
+ * UTILITIES & PROFILE
  */
+function toggleProfileView() {
+    const profile = document.getElementById("profileSection");
+    const dashboard = document.getElementById("dashboardContent");
+    profile.style.display = (profile.style.display === "none") ? "block" : "none";
+    dashboard.style.opacity = (profile.style.display === "block") ? "0.2" : "1";
+}
+
+function saveProfile() {
+    const profileData = {
+        name: document.getElementById("profileFullName").value,
+        role: document.getElementById("profileRole").value,
+        dob: document.getElementById("profileDOB").value,
+        email: document.getElementById("profileEmail").value
+    };
+    localStorage.setItem("userProfile", JSON.stringify(profileData));
+    document.getElementById("userNameDisplay").innerText = profileData.name || "User";
+    alert("Profile Updated! ✅");
+    toggleProfileView();
+}
+
+function previewImage(event) {
+    const reader = new FileReader();
+    reader.onload = function() {
+        document.getElementById('profilePicPreview').src = reader.result;
+        document.getElementById('navAvatar').src = reader.result;
+        localStorage.setItem("userAvatar", reader.result);
+    }
+    reader.readAsDataURL(event.target.files[0]);
+}
+
 function viewDetails(c) {
     document.getElementById("modalCandidateName").innerText = c.name;
     document.getElementById("modalScore").innerText = c.score;
@@ -174,10 +185,9 @@ function viewDetails(c) {
 function closeModal() { document.getElementById("detailsModal").style.display = "none"; }
 function getScoreColor(s) { return s > 80 ? "#22c55e" : s >= 50 ? "#f59e0b" : "#ef4444"; }
 function formatSkills(s) { return s ? s.split(",").map(skill => `<span class="skill-tag">${skill.trim()}</span>`).join("") : "None"; }
-function closeWelcome() { document.getElementById("welcomePopup").style.display = "none"; }
 function logout() { localStorage.clear(); window.location.href = "login.html"; }
 
-// Triggers & Navigation
+// Upload triggers
 document.getElementById("jdDrop").onclick = () => document.getElementById("jd_pdf").click();
 document.getElementById("resumeDrop").onclick = () => document.getElementById("pdf").click();
 document.getElementById("jd_pdf").onchange = (e) => { document.getElementById("jdFileName").innerText = e.target.files[0]?.name || ""; };

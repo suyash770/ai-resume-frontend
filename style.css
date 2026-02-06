@@ -603,3 +603,25 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color
 
 .btn-logout-alt { background: #fee2e2; color: #dc2626; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
 .btn-save { width: 100%; background: #7c3aed; color: white; border: none; padding: 12px; border-radius: 8px; margin-top: 20px; cursor: pointer; font-weight: 600; }
+
+.action-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-action {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-view { background: #f1f5f9; color: #1e293b; }
+.btn-email { background: #7c3aed; color: white; }
+
+.btn-action:hover { opacity: 0.8; transform: translateY(-1px); }
