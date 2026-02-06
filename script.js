@@ -10,10 +10,10 @@ if (!sessionData && !window.location.href.includes("login.html")) {
     window.location.href = "login.html";
 }
 
-// Initialize EmailJS for automated recruitment communication
+// 2. INITIALIZE EMAILJS
 (function() {
     if (typeof emailjs !== 'undefined') {
-        emailjs.init("YOUR_PUBLIC_KEY"); 
+        emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your Public Key
     }
 })();
 
@@ -26,18 +26,12 @@ function checkLogin() {
     // Capitalizes the verified database username for the UI
     const formattedName = sessionData.username.charAt(0).toUpperCase() + sessionData.username.slice(1);
     
-    // Update dashboard name displays
     if (document.getElementById("userNameDisplay")) document.getElementById("userNameDisplay").innerText = formattedName;
     if (document.getElementById("welcomeName")) document.getElementById("welcomeName").innerText = formattedName;
-    if (document.getElementById("userRoleDisplay")) {
-        document.getElementById("userRoleDisplay").innerText = sessionData.role.toUpperCase() + " Panel";
-    }
-
-    // Load persistent profile avatar if stored locally
+    
     const savedAvatar = localStorage.getItem("userAvatar");
-    if (savedAvatar) {
-        if (document.getElementById('navAvatar')) document.getElementById('navAvatar').src = savedAvatar;
-        if (document.getElementById('profilePicPreview')) document.getElementById('profilePicPreview').src = savedAvatar;
+    if (savedAvatar && document.getElementById('navAvatar')) {
+        document.getElementById('navAvatar').src = savedAvatar;
     }
 
     if (document.getElementById("welcomePopup")) document.getElementById("welcomePopup").style.display = "block";
@@ -47,7 +41,6 @@ function checkLogin() {
  * ROLE-SPECIFIC SESSION VALIDATION
  */
 function checkAdminSession() {
-    // Verifies that the logged-in user has 'admin' privileges
     if (!sessionData || sessionData.role !== 'admin') window.location.href = "login.html";
     checkLogin();
     loadCandidates(); 
@@ -56,14 +49,13 @@ function checkAdminSession() {
 }
 
 function checkCandidateSession() {
-    // Verifies that the logged-in user has 'candidate' privileges
     if (!sessionData || sessionData.role !== 'candidate') window.location.href = "login.html";
     if (document.getElementById("candName")) document.getElementById("candName").innerText = sessionData.username;
     checkLogin();
 }
 
 /**
- * ADMINISTRATIVE MANAGEMENT (Database Sync)
+ * ADMINISTRATIVE: USER & LOG MANAGEMENT
  */
 async function fetchAllUsers() {
     try {
@@ -72,7 +64,6 @@ async function fetchAllUsers() {
         const userTable = document.getElementById("adminUserTable");
         if (!userTable) return;
 
-        // Render user management table from SQLite data
         userTable.innerHTML = users.map(u => `
             <tr>
                 <td><strong>${u.username}</strong></td>
@@ -80,7 +71,7 @@ async function fetchAllUsers() {
                 <td><span class="skill-tag">${u.role.toUpperCase()}</span></td>
                 <td>
                     <button class="btn-action" style="background:#fee2e2; color:#dc2626;" 
-                    onclick="deleteUser(${u.id}, '${u.username}')">Delete Account</button>
+                    onclick="deleteUser(${u.id}, '${u.username}')">Delete</button>
                 </td>
             </tr>`).join("");
     } catch (err) { console.error("User management fetch error:", err); }
@@ -121,7 +112,6 @@ async function analyze() {
     
     document.getElementById("analysisLoader").style.display = "flex";
     const formData = new FormData();
-    // Passes verified HR email to create an activity audit trail
     formData.append("hr_email", sessionData.email); 
 
     if (document.getElementById("jd_pdf").files[0]) {
@@ -149,7 +139,6 @@ async function loadCandidates() {
         renderDashboard();
         updateChart();
         
-        // Update Admin stats from SQL metrics
         if (document.getElementById("adminTotalRuns")) {
             const stats = await (await fetch(`${BASE_URL}/admin/stats`)).json();
             document.getElementById("adminTotalRuns").innerText = stats.total_runs;
@@ -159,27 +148,7 @@ async function loadCandidates() {
 }
 
 /**
- * PASSWORD RECOVERY LOGIC
- */
-async function handlePasswordReset() {
-    const email = prompt("Enter registered Email:");
-    const mobile = prompt("Enter registered Mobile:");
-    const newPass = prompt("Enter NEW Password:");
-    if (!email || !mobile || !newPass) return;
-
-    try {
-        const response = await fetch(`${BASE_URL}/reset_password`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, mobile, new_pass: newPass })
-        });
-        const result = await response.json();
-        alert(result.message || result.error);
-    } catch (err) { alert("Connection error ❌"); }
-}
-
-/**
- * DASHBOARD UI RENDERING
+ * UI RENDERING & UTILITIES
  */
 function renderDashboard() {
     const table = document.getElementById("resultTable");
@@ -201,21 +170,41 @@ function renderDashboard() {
             <td>${formatSkills(c.matched)}</td>
             <td style="display: flex; gap: 8px; justify-content: center;">
                 <button class="btn-action btn-view" onclick='viewDetails(${JSON.stringify(c)})'>View</button>
-                <button class="btn-action btn-email" style="background:#7c3aed; color:white;" onclick='openEmailModal(${JSON.stringify(c)})'>Email</button>
+                <button class="btn-action btn-email" style="background:#7c3aed; color:white; border:none; padding:6px 12px; border-radius:6px;" onclick='openEmailModal(${JSON.stringify(c)})'>Email</button>
             </td>
         </tr>`).join("");
 }
 
 function openEmailModal(c) {
-    document.getElementById("emailTo").value = c.email || ""; 
+    const emailField = document.getElementById("emailTo");
+    emailField.value = c.email || ""; 
+    
     if (c.score > 70) {
         document.getElementById("emailSubject").value = "Interview Invitation - " + c.name;
         document.getElementById("emailMessage").value = `Hi ${c.name},\n\nYour profile matches our needs (${c.score}%). We'd like to interview you.\n\nBest,\n${sessionData.username}`;
     } else {
         document.getElementById("emailSubject").value = "Application Update - " + c.name;
-        document.getElementById("emailMessage").value = `Hi ${c.name},\n\nThank you for applying. We will keep your resume on file.\n\nBest,\n${sessionData.username}`;
+        document.getElementById("emailMessage").value = `Hi ${c.name},\n\nThank you for applying. While your profile was analyzed at ${c.score}%, we have decided to move forward with other candidates.\n\nBest,\n${sessionData.username}`;
     }
     document.getElementById("emailModal").style.display = "flex";
+}
+
+async function sendEmail() {
+    const btn = document.getElementById("sendEmailBtn");
+    btn.innerText = "Sending...";
+    const params = {
+        to_email: document.getElementById("emailTo").value,
+        subject: document.getElementById("emailSubject").value,
+        message: document.getElementById("emailMessage").value,
+        from_name: sessionData.username
+    };
+
+    try {
+        await emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", params);
+        alert("Email sent successfully! 📧");
+        document.getElementById("emailModal").style.display = "none";
+    } catch (err) { alert("Email failed to send ❌"); }
+    finally { btn.innerText = "Send Email Now"; }
 }
 
 function logout() {
@@ -226,12 +215,24 @@ function logout() {
 function getScoreColor(s) { return s > 80 ? "#22c55e" : s >= 50 ? "#f59e0b" : "#ef4444"; }
 function formatSkills(s) { return s ? s.split(",").map(skill => `<span class="skill-tag">${skill.trim()}</span>`).join("") : "None"; }
 
-// Interaction triggers
-if (document.getElementById("jdDrop")) {
-    document.getElementById("jdDrop").onclick = () => document.getElementById("jd_pdf").click();
-    document.getElementById("resumeDrop").onclick = () => document.getElementById("pdf").click();
-    document.getElementById("jd_pdf").onchange = (e) => { document.getElementById("jdFileName").innerText = e.target.files[0]?.name || ""; };
-    document.getElementById("pdf").onchange = (e) => { document.getElementById("resumeFileNames").innerText = Array.from(e.target.files).map(f => f.name).join(", "); };
+/**
+ * PASSWORD RECOVERY LOGIC
+ */
+async function handlePasswordReset() {
+    const email = prompt("Enter registered Email:");
+    const mobile = prompt("Enter registered Mobile:");
+    const newPass = prompt("Enter NEW Password:");
+    if (!email || !mobile || !newPass) return;
+
+    try {
+        const response = await fetch(`${BASE_URL}/reset_password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, mobile, new_pass: newPass })
+        });
+        const result = await response.json();
+        alert(result.message || result.error);
+    } catch (err) { alert("Connection error ❌"); }
 }
 
 function updateChart() {
