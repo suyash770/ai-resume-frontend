@@ -2,7 +2,8 @@ const BASE_URL = "https://ai-resume-backend-w44h.onrender.com";
 let candidateData = [];
 let scoreChart;
 
-// 1. SESSION PROTECTION & INITIALIZATION
+// 1. HARD SESSION PROTECTION & RBAC
+// Prevents unauthorized dashboard access by verifying the stored user session.
 const sessionData = JSON.parse(localStorage.getItem("userSession"));
 
 if (!sessionData && !window.location.href.includes("login.html")) {
@@ -12,17 +13,18 @@ if (!sessionData && !window.location.href.includes("login.html")) {
 // 2. INITIALIZE EMAILJS
 (function() {
     if (typeof emailjs !== 'undefined') {
-        emailjs.init("YOUR_PUBLIC_KEY"); 
+        emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your Public Key
     }
 })();
 
 /**
- * AUTHENTICATION LOGIC (Login & Register)
+ * AUTHENTICATION & IDENTITY VERIFICATION
  */
+
 async function registerUser(name, email, mobile, pass, role) {
     if (!name || !email || !pass) return alert("Please fill all required fields!");
     const btn = document.getElementById("authBtn");
-    btn.classList.add("loading");
+    btn.classList.add("loading"); // Show loading spinner
 
     try {
         const response = await fetch(`${BASE_URL}/register`, {
@@ -69,8 +71,9 @@ async function loginUser(email, pass, role) {
 }
 
 /**
- * UI & PROFILE NAVIGATION
+ * UI NAVIGATION & PROFILE SETTINGS
  */
+
 function toggleProfileView() {
     const profile = document.getElementById("profileSection");
     if (profile) {
@@ -96,8 +99,9 @@ function showSuccessEffect(message) {
 }
 
 /**
- * HR PANEL: ANALYSIS & EMAIL
+ * HR PANEL: ANALYSIS, RENDERING & EMAIL
  */
+
 async function analyze() {
     const resumeInput = document.getElementById("pdf");
     const jdInput = document.getElementById("jd_pdf");
@@ -115,8 +119,8 @@ async function analyze() {
     try {
         const response = await fetch(`${BASE_URL}/predict`, { method: "POST", body: formData });
         if (response.ok) {
-            alert("Analysis saved! ✅");
-            loadCandidates();
+            alert("Analysis saved to database! ✅");
+            await loadCandidates();
         }
     } finally { document.getElementById("analysisLoader").style.display = "none"; }
 }
@@ -127,46 +131,103 @@ async function loadCandidates() {
         candidateData = await res.json();
         renderDashboard();
         updateChart();
-        if (document.getElementById("adminTotalRuns")) {
-            const stats = await (await fetch(`${BASE_URL}/admin/stats`)).json();
-            document.getElementById("adminTotalRuns").innerText = stats.total_runs;
-            document.getElementById("adminTotalUsers").innerText = stats.total_users;
-        }
-    } catch (err) { console.error("Sync error:", err); }
+    } catch (err) { console.error("Database sync error:", err); }
 }
 
 function renderDashboard() {
     const table = document.getElementById("resultTable");
     if (!table || !candidateData.length) return;
+
+    // BEST CANDIDATE & AVG SCORE LOGIC
+    const best = candidateData.reduce((prev, current) => (prev.score > current.score) ? prev : current);
     document.getElementById("totalCount").innerText = candidateData.length;
     document.getElementById("avgScore").innerText = Math.round(candidateData.reduce((s, c) => s + c.score, 0) / candidateData.length) + "%";
-    
+    document.getElementById("bestCandidate").innerText = best.name;
+
+    // TABLE RENDERING WITH VIEW & EMAIL ACTIONS
     table.innerHTML = candidateData.map(c => `
         <tr>
             <td><strong>${c.name}</strong></td>
-            <td>${c.score}% Match</td>
-            <td>${c.matched}</td>
-            <td class="action-cell">
-                <button class="btn-action btn-email" onclick='openEmailModal(${JSON.stringify(c)})'>Email</button>
+            <td><span class="skill-tag">${c.score}% Match</span></td>
+            <td>${formatSkills(c.matched)}</td>
+            <td style="display: flex; gap: 8px; justify-content: center;">
+                <button class="btn-action" style="background:#f1f5f9; color:#1e293b;" onclick='viewDetails(${JSON.stringify(c)})'>View</button>
+                <button class="btn-action" style="background:#7c3aed; color:white;" onclick='openEmailModal(${JSON.stringify(c)})'>Email</button>
             </td>
         </tr>`).join("");
 }
 
+function viewDetails(c) {
+    document.getElementById("modalCandidateName").innerText = c.name;
+    document.getElementById("modalScore").innerText = c.score;
+    document.getElementById("modalExplanation").innerText = c.explanation || "Detailed analysis results stored in database.";
+    document.getElementById("detailsModal").style.display = "flex";
+}
+
 /**
- * ADMIN FUNCTIONS
+ * EMAIL AUTOMATION & DATA VISUALIZATION
  */
+
+function openEmailModal(c) {
+    document.getElementById("emailTo").value = c.email || "";
+    document.getElementById("emailSubject").value = c.score > 70 ? "Interview Invitation" : "Application Status Update";
+    document.getElementById("emailMessage").value = `Hi ${c.name},\n\nYour profile matched ${c.score}% for the role. We'd like to discuss the next steps.\n\nBest,\n${sessionData.username}`;
+    document.getElementById("emailModal").style.display = "flex";
+}
+
+async function sendEmail() {
+    const btn = document.getElementById("sendEmailBtn");
+    btn.innerText = "Sending...";
+    try {
+        await emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+            to_email: document.getElementById("emailTo").value,
+            subject: document.getElementById("emailSubject").value,
+            message: document.getElementById("emailMessage").value,
+            from_name: sessionData.username
+        });
+        alert("Email sent successfully! 📧");
+        document.getElementById("emailModal").style.display = "none";
+    } catch (err) { alert("Email Failed ❌"); }
+    finally { btn.innerText = "Send Email Now"; }
+}
+
+function updateChart() {
+    const ctx = document.getElementById('scoreChart')?.getContext('2d');
+    if (!ctx || !candidateData.length) return;
+    if (scoreChart) scoreChart.destroy();
+    scoreChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: candidateData.map(c => c.name.substring(0, 8)),
+            datasets: [{ label: 'Score %', data: candidateData.map(c => c.score), backgroundColor: '#7c3aed', borderRadius: 5 }]
+        }
+    });
+}
+
+/**
+ * ADMIN FUNCTIONS & LOGOUT
+ */
+
 async function fetchAllUsers() {
     const res = await fetch(`${BASE_URL}/admin/users`);
     const users = await res.json();
     const table = document.getElementById("adminUserTable");
     if (table) {
         table.innerHTML = users.map(u => `
-            <tr><td>${u.username}</td><td>${u.email}</td><td>${u.role}</td>
-            <td><button onclick="deleteUser(${u.id})" style="color:red">Delete</button></td></tr>`).join("");
+            <tr>
+                <td><strong>${u.username}</strong></td>
+                <td>${u.email}</td>
+                <td><span class="skill-tag">${u.role.toUpperCase()}</span></td>
+                <td><button onclick="deleteUser(${u.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Delete</button></td>
+            </tr>`).join("");
     }
 }
 
 function logout() {
     localStorage.clear();
     window.location.href = "login.html";
+}
+
+function formatSkills(s) {
+    return s ? s.split(",").map(skill => `<span class="skill-match">${skill.trim()}</span>`).join("") : "None";
 }
