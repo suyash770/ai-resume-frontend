@@ -3,7 +3,7 @@ let candidateData = [];
 let scoreChart;
 
 // 1. HARD SESSION PROTECTION & RBAC
-// Prevents unauthorized dashboard access by verifying the stored user session.
+// Prevents unauthorized access and ensures the user is logged in before viewing dashboards.
 const sessionData = JSON.parse(localStorage.getItem("userSession"));
 
 if (!sessionData && !window.location.href.includes("login.html")) {
@@ -13,18 +13,18 @@ if (!sessionData && !window.location.href.includes("login.html")) {
 // 2. INITIALIZE EMAILJS
 (function() {
     if (typeof emailjs !== 'undefined') {
-        emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your Public Key
+        emailjs.init("YOUR_PUBLIC_KEY"); // Ensure you replace this with your real key
     }
 })();
 
 /**
- * AUTHENTICATION & IDENTITY VERIFICATION
+ * AUTHENTICATION CORE (Login & Register)
  */
 
 async function registerUser(name, email, mobile, pass, role) {
     if (!name || !email || !pass) return alert("Please fill all required fields!");
     const btn = document.getElementById("authBtn");
-    btn.classList.add("loading"); // Show loading spinner
+    btn.classList.add("loading"); 
 
     try {
         const response = await fetch(`${BASE_URL}/register`, {
@@ -57,7 +57,7 @@ async function loginUser(email, pass, role) {
         });
         const result = await response.json();
         if (response.ok) {
-            showSuccessEffect("Login Successful! Redirecting...");
+            showSuccessEffect("Login Successful!");
             localStorage.setItem("userSession", JSON.stringify(result.user));
             setTimeout(() => { window.location.href = result.redirect; }, 1500);
         } else {
@@ -138,21 +138,24 @@ function renderDashboard() {
     const table = document.getElementById("resultTable");
     if (!table || !candidateData.length) return;
 
-    // BEST CANDIDATE & AVG SCORE LOGIC
-    const best = candidateData.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+    // BEST CANDIDATE & METRICS
+    const best = candidateData.reduce((prev, curr) => (prev.score > curr.score) ? prev : curr);
     document.getElementById("totalCount").innerText = candidateData.length;
     document.getElementById("avgScore").innerText = Math.round(candidateData.reduce((s, c) => s + c.score, 0) / candidateData.length) + "%";
     document.getElementById("bestCandidate").innerText = best.name;
 
-    // TABLE RENDERING WITH VIEW & EMAIL ACTIONS
+    // TABLE RENDERING (Progress Bars & Action Buttons)
     table.innerHTML = candidateData.map(c => `
         <tr>
             <td><strong>${c.name}</strong></td>
-            <td><span class="skill-tag">${c.score}% Match</span></td>
+            <td>
+                <div class="progress-bar"><div class="progress-fill ${getScoreClass(c.score)}" style="width:${c.score}%"></div></div>
+                <small>${c.score}% Match</small>
+            </td>
             <td>${formatSkills(c.matched)}</td>
             <td style="display: flex; gap: 8px; justify-content: center;">
-                <button class="btn-action" style="background:#f1f5f9; color:#1e293b;" onclick='viewDetails(${JSON.stringify(c)})'>View</button>
-                <button class="btn-action" style="background:#7c3aed; color:white;" onclick='openEmailModal(${JSON.stringify(c)})'>Email</button>
+                <button class="btn-action btn-view" onclick='viewDetails(${JSON.stringify(c)})'>View</button>
+                <button class="btn-action btn-email" style="background:#7c3aed; color:white;" onclick='openEmailModal(${JSON.stringify(c)})'>Email</button>
             </td>
         </tr>`).join("");
 }
@@ -160,12 +163,12 @@ function renderDashboard() {
 function viewDetails(c) {
     document.getElementById("modalCandidateName").innerText = c.name;
     document.getElementById("modalScore").innerText = c.score;
-    document.getElementById("modalExplanation").innerText = c.explanation || "Detailed analysis results stored in database.";
+    document.getElementById("modalExplanation").innerText = c.explanation || "NLP Analysis complete. Match found in database.";
     document.getElementById("detailsModal").style.display = "flex";
 }
 
 /**
- * EMAIL AUTOMATION & DATA VISUALIZATION
+ * EMAIL & VISUAL ANALYTICS
  */
 
 function openEmailModal(c) {
@@ -205,9 +208,20 @@ function updateChart() {
 }
 
 /**
- * ADMIN FUNCTIONS & LOGOUT
+ * SESSION & UTILITIES
  */
 
+function getScoreClass(s) { return s > 70 ? 'score-high' : s > 40 ? 'score-mid' : 'score-low'; }
+function formatSkills(s) { return s ? s.split(",").map(sk => `<span class="skill-match">${sk.trim()}</span>`).join("") : "None"; }
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+function checkLogin() {
+    if (!sessionData) return;
+    const formattedName = sessionData.username.charAt(0).toUpperCase() + sessionData.username.slice(1);
+    if (document.getElementById("userNameDisplay")) document.getElementById("userNameDisplay").innerText = formattedName;
+}
+
+// Admin Specific Logic
 async function fetchAllUsers() {
     const res = await fetch(`${BASE_URL}/admin/users`);
     const users = await res.json();
@@ -221,13 +235,4 @@ async function fetchAllUsers() {
                 <td><button onclick="deleteUser(${u.id})" style="background:#fee2e2; color:#dc2626; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Delete</button></td>
             </tr>`).join("");
     }
-}
-
-function logout() {
-    localStorage.clear();
-    window.location.href = "login.html";
-}
-
-function formatSkills(s) {
-    return s ? s.split(",").map(skill => `<span class="skill-match">${skill.trim()}</span>`).join("") : "None";
 }
